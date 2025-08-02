@@ -1,4 +1,4 @@
-import { Link, usePage } from "@inertiajs/react";
+import { Link, router, usePage } from "@inertiajs/react";
 import { CaretDownOutlined, BarChartOutlined, ClockCircleOutlined, BellOutlined, OrderedListOutlined } from "@ant-design/icons";
 
 export default function AuthenticatedLayout({ children }) {
@@ -9,12 +9,7 @@ export default function AuthenticatedLayout({ children }) {
     const urlSegments = url.split('/');
     let currentRoute;
 
-    if (urlSegments.length === 2) {
-        currentRoute = urlSegments[urlSegments.length - 1];
-    } else if (urlSegments.length === 3) {
-        currentRoute = urlSegments[1];
-    }
-
+    currentRoute = urlSegments[1];
 
     return (
         <>
@@ -25,17 +20,29 @@ export default function AuthenticatedLayout({ children }) {
                     color: white !important;
                 }
                 .navBtn{
-                color: #ffffff7c;
-                transition: all 0.3s ease-in-out;
+                    color: #ffffff7c;
+                    transition: all 0.3s ease-in-out;
                 }
                 .navBtn:hover{
                     color: white !important;
+                }
+                .logoutBtn{
+                    width: 86%;
+                    border: solid 1px red;
+                    padding: 8px;
+                    color: red;
+                    border-radius: 8px;
+                    transition: all 0.3s ease-in-out;
+                }
+                .logoutBtn:hover{
+                    background-color: red;
+                    color: white;
                 }
                 `}
             </style>
             <div className="container-fluid min-h-screen" style={{ fontSize: "13px" }}>
                 <div className="row">
-                    <div className="col-2">
+                    <div className="col-2" style={{ position: "fixed", height: "100vh", position: "relative" }}>
                         <div className="bg-theme rounded shadow-sm p-2 px-3" style={{ marginLeft: "-6px", marginTop: "5px", height: "98.5vh" }}>
                             <div className="text-white brand fw-bold text-center" style={{ borderBottom: "1px solid #dfdfdf65", paddingBottom: "25px", marginTop: "18px" }}>
                                 <BarChartOutlined style={{ fontSize: "20px", marginRight: "1px" }} /> Admin Dashboard
@@ -47,7 +54,7 @@ export default function AuthenticatedLayout({ children }) {
                                         {user?.name}
                                     </div>
                                     <div>
-                                        <CaretDownOutlined style={{ fontSize: "12px" }} />
+                                        {/* <CaretDownOutlined style={{ fontSize: "12px" }} /> */}
                                     </div>
                                 </div>
                             </div>
@@ -72,8 +79,11 @@ export default function AuthenticatedLayout({ children }) {
                                 </Link>
                             </div>
                         </div>
+                        <div style={{ position: "absolute", bottom: "15px", width: "100%" }}>
+                            <button onClick={() => router.post('/logout')} className="logoutBtn">Log out</button>
+                        </div>
                     </div>
-                    <div className="col-10">
+                    <div className="col-10" style={{ position: "absolute", right: 0, height: "100vh", overflowY: "scroll" }}>
                         {children}
                     </div>
                 </div>

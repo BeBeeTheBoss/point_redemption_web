@@ -12,11 +12,12 @@ use Illuminate\Support\Facades\Hash;
 class AuthController extends Controller
 {
 
-    public function loginPage(Request $request){
+    public function loginPage(Request $request)
+    {
 
-        // if(Auth::check()){
-        //     return redirect()->route('historiesPage');
-        // }
+        if (Auth::check()) {
+            return redirect()->route('historiesPage');
+        }
 
         return Inertia::render('Auth/Login');
     }
@@ -40,10 +41,12 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
+        Auth::guard('web')->logout();
 
-        $request->user()->currentAccessToken()->delete();
-        info("Logged out");
-        return sendResponse(null, 200, "Logout successfully");
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('loginPage');
     }
 
 }

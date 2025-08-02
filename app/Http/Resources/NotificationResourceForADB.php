@@ -19,6 +19,7 @@ class NotificationResourceForADB extends JsonResource
             'title' => $this->title,
             'body' => $this->body,
             'image' => $this->image ? url('storage/notification_images/' . $this->image) : null,
+            'business_id' => $this->business_id,
             'to' => $this->business ? $this->business->name : 'All',
             'created_at' => $this->created_at,
         ];

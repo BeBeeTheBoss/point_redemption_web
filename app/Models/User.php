@@ -22,6 +22,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'business_id',
         'push_noti_token'
     ];
 

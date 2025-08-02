@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Resources\UserResource;
+use App\Models\Business;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -20,7 +22,7 @@ class UserController extends Controller
         if ($id) {
             $user = $this->model->find($id);
             $user['token'] = $user->createToken(env('APP_NAME') . '_Token')->plainTextToken;
-            return sendResponse($user, 200);
+            return sendResponse(new UserResource($user), 200);
         } else {
             return sendResponse($this->model->all(), 200);
         }
@@ -32,8 +34,12 @@ class UserController extends Controller
 
         $user = $this->model->find(Auth::user()->id);
         $user->name = $request->name;
-        $user->business_name = $request->business_name;
         $user->save();
+
+        $business = Business::find($user->business_id);
+        $business->name = $request->business_name;
+        $business->save();
+
         return sendResponse($user, 200, "Updated successfully");
 
     }
