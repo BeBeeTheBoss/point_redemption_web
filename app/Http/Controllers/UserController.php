@@ -14,11 +14,18 @@ class UserController extends Controller
 
         $request->validate([
             'name' => 'required',
-            'email' => 'required',
+            'email' => 'required|email|unique:users,email',
             'password' => 'required',
         ]);
 
-        $this->model->create($request->all());
+        $this->model->create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'business_id' => $request->business_id ?? null,
+            'branch_id' => $request->branch_id ?? null,
+            'role' => $request->branch_id == null ? 'admin' : 'user'
+        ]);
 
         return redirect()->route('businessesPage')->with('success', 'User added');
     }

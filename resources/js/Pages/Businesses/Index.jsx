@@ -1,11 +1,12 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { usePage, Link, router } from "@inertiajs/react";
-import { Breadcrumb, Button, Popconfirm } from "antd";
+import { Breadcrumb, Button, Popconfirm, Switch } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Dialog from '@mui/material/Dialog';
 import dayjs from "dayjs";
+import { breadcrumbsClasses } from "@mui/material";
 
 export default function Histories() {
 
@@ -21,6 +22,8 @@ export default function Histories() {
     const [searchKey, setSearchKey] = useState('');
     const [businesses, setBusinesses] = useState(null);
     const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
+    const [isAddBranchDialogOpen, setIsAddBranchDialogOpen] = useState(false);
+    const [isSetAdminDialogOpen, setIsSetAdminDialogOpen] = useState(false);
     const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [viewedBusiness, setViewedBusiness] = useState(null);
@@ -28,7 +31,8 @@ export default function Histories() {
         name: '',
         email: '',
         password: '',
-        business_id: ''
+        business_id: '',
+        branch_id: ''
     });
 
     const [userEditForm, setUserEditForm] = useState({
@@ -38,10 +42,19 @@ export default function Histories() {
         password: '',
     });
 
+    const [branchForm, setBranchForm] = useState({
+        name: '',
+        address: '',
+        business_id: '',
+    });
+
 
     useEffect(() => {
 
         setBusinesses(props?.businesses);
+
+        console.log(props?.businesses);
+
 
         if (props?.flash.success) {
             toast.success(props?.flash.success);
@@ -68,10 +81,13 @@ export default function Histories() {
     const addUser = () => {
 
         setLoading(true);
+        console.log(form);
+
 
         router.post('/users', form, {
             onSuccess: (response) => {
                 setIsAddUserDialogOpen(false);
+                setIsSetAdminDialogOpen(false);
                 setLoading(false);
             },
             onError: (erros) => {
@@ -117,6 +133,7 @@ export default function Histories() {
             onSuccess: (response) => {
                 setLoading(false);
                 setIsEditUserDialogOpen(false);
+                setIsSetAdminDialogOpen(false);
             },
             onError: (erros) => {
 
@@ -131,6 +148,42 @@ export default function Histories() {
             }
         })
 
+    }
+
+    const toggleBusiness = (id) => {
+        setBusinesses(businesses.map((business) => {
+            if (business.id === id) {
+                business.is_active = !business.is_active;
+            }
+            return business;
+        }));
+
+        router.post('/businesses/toggle', { id: id });
+    }
+
+    const addBranch = () => {
+
+        console.log(branchForm);
+
+
+        setLoading(true);
+
+        router.post('/branches', branchForm, {
+            onSuccess: (response) => {
+                setIsAddBranchDialogOpen(false);
+                setLoading(false);
+            },
+            onError: (errors) => {
+                setLoading(false);
+                if (errors.name) {
+                    toast.error(errors.name);
+                }
+
+                if (errors.address) {
+                    toast.error(errors.address);
+                }
+            }
+        });
     }
 
     return (
@@ -186,83 +239,175 @@ export default function Histories() {
 
                 <div className="mt-3">
                     {businesses?.map((business) => (
-                        <div key={business.id} className="card w-100 p-3 mb-2 shadow-sm">
-                            <div className="flex justify-between">
-                                {business.name}
+                        <div className="bg-white rounded shadow-sm p-3 mb-3 border" key={business.id}>
+                            <div className="flex justify-between items-center">
+                                <div className="flex items-center">
+                                    <div className=" bg-theme text-white w-[37px] h-[37px] rounded flex items-center justify-center uppercase fs-4">{business.name.charAt(0)}</div>
+                                    <div className="ms-2 fw-bold" style={{ fontSize: 16 }}>{business.name}</div>
+                                    <div className={`badge ms-2 px-2 py-1 ${business.is_active ? 'bg-success' : 'bg-danger'}`}>{business.is_active ? 'Active' : 'Inactive'}</div>
+                                </div>
+                                <div className="flex items-center">  <span className=" ">{business.campaign_start_date}</span> <img src="/images/arrow-right.png" className="mx-2" style={{ width: "17px" }} /> <span className="">{business.campaign_end_date}</span></div>
                                 <div className="flex">
-                                    <Link href={'/businesses/edit/' + business.id} className={'text-decoration-none'}>
-                                        <button className="me-1 bg-primary" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
-                                            <EditOutlined />
-                                        </button>
-                                    </Link>
-                                    <Popconfirm
-                                        title="Delete this business"
-                                        description="Are you sure to delete this business?"
-                                        onConfirm={() => deleteBusiness(business.id)}
-                                        okText="Yes"
-                                        cancelText="No"
-                                    >
-                                        <button className="bg-danger" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
-                                            <DeleteOutlined />
-                                        </button>
-                                    </Popconfirm>
+                                    <Switch color="danger" checked={business.is_active} onChange={(e) => toggleBusiness(business.id)} className="me-2" />
+                                    <button className="me-1 bg-primary" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
+                                        <EditOutlined />
+                                    </button>
+                                    <button className="bg-danger" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
+                                        <DeleteOutlined />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="h-[1px] my-3" style={{ backgroundColor: "#e3e3e3" }}></div>
+
+                            <div className="flex justify-between items-center">
+                                <div className="flex items-center">
+
+                                    {business?.admins[0] ? (
+                                        <>
+                                            <div className="p-3 bg-secondary text-white w-[20px] h-[20px] rounded-circle flex items-center justify-center uppercase">{business.admins[0].name.charAt(0)}</div>
+                                            <div className="ms-2 ">
+                                                <div className="fw-bold">{business.admins[0].name} - Admin</div>
+                                                <div style={{ fontSize: "11px" }}>{business.admins[0].email}</div>
+                                            </div>
+                                        </>
+                                    )
+                                        :
+                                        <div className="text-gray-500">No admin has been set yet for this business.</div>
+                                    }
+                                </div>
+                                <div className="flex">
+
+
+                                    {business?.admins[0] ? (
+                                        <>
+                                            <button className="me-1 bg-primary" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
+                                                <EditOutlined />
+                                            </button>
+                                            <button className="bg-danger" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
+                                                <DeleteOutlined />
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <button className="btn btn-outline-secondary btn-sm" onClick={() => {
+                                            setViewedBusiness(business);
+                                            setForm({ ...form, business_id: business.id, branch_id: null });
+                                            setIsSetAdminDialogOpen(true);
+                                        }}>Set Admin</button>
+                                    )}
 
                                 </div>
                             </div>
-                            <div>
 
-                                {business?.users.length > 0 &&
+                            <div className="h-[1px] my-3" style={{ backgroundColor: "#e3e3e3" }}></div>
 
-                                    <table className="table table-bordered border mt-3">
-                                        <thead>
-                                            <tr>
-                                                <th className="py-2">Name</th>
-                                                <th>Email</th>
-                                                <th>Created date</th>
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {business.users?.map((user) => (
-                                                <tr key={user.id}>
-                                                    <td className="py-3">{user.name}</td>
-                                                    <td className="py-3">{user.email}</td>
-                                                    <td className="py-3">{dayjs(user.created_at).format('MMMM D, YYYY h:mm A')}</td>
-                                                    <td className="col-1 text-end">
-                                                        <button onClick={() => setUserData(user)} className="me-1 bg-primary" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
-                                                            <EditOutlined />
-                                                        </button>
-                                                        <Popconfirm
-                                                            title="Delete this user"
-                                                            description="Are you sure to delete this user?"
-                                                            onConfirm={() => deleteUser(user.id)}
-                                                            okText="Yes"
-                                                            cancelText="No"
-                                                        >
+                            <div className="mb-3">
+                                {business?.branches.length > 0 && (
+                                    business.branches.map((branch) => (
+                                        <div className="bg-gray-100 p-3 rounded mt-3">
+                                            <div className="flex justify-between items-center">
+                                                <div className="flex items-center">
+                                                    <img src="/images/map.png" style={{ width: "30px" }} />
+                                                    <div>
+                                                        <span className="ms-3 fw-bold" style={{ fontSize: "14px" }}>{branch.name}</span>
+                                                        <div className="ms-3" style={{ fontSize: "10px" }}>{branch.address}</div>
+                                                    </div>
+                                                </div>
+                                                <div className="text-secondary">
+                                                    {branch.users.length} users
+                                                </div>
+                                            </div>
+                                            <div className="mt-3 flex justify-between items-center">Branch Users <button className="btn btn-sm btn-primary" onClick={() => {
+                                                setIsAddUserDialogOpen(true);
+                                                setViewedBusiness(business);
+                                                setForm({ ...form, business_id: null, branch_id: branch.id });
+                                            }}>Add user</button> </div>
+
+                                            {branch.users.length > 0 ? (
+                                                branch.users.map((user) => (
+                                                    <div className="flex items-center">
+                                                        <div className="flex items-center mt-3">
+                                                            <div className="w-[25px] h-[25px] rounded-circle flex items-center justify-center uppercase text-white" style={{ fontSize: "13px", backgroundColor: "#0B5ED7" }}>{user.name.charAt(0)}</div>
+                                                            <div className="ms-1">
+                                                                <div className="fw-bold">{user.name} - <span className="fw-normal">{user.email}</span></div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center pt-3 ms-5">
+                                                            <button className="me-1 bg-primary" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
+                                                                <EditOutlined />
+                                                            </button>
                                                             <button className="bg-danger" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
                                                                 <DeleteOutlined />
                                                             </button>
-                                                        </Popconfirm>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-
-                                }
-
-
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="text-secondary mt-2">No users in this branch.</div>
+                                            )}
+                                        </div>
+                                    ))
+                                )}
                             </div>
-                            <div className={`flex justify-end ${business?.users.length > 0 ? '' : 'mt-3'}`}>
-                                <Button type="dark" onClick={() => {
-                                    setIsAddUserDialogOpen(true);
+
+                            <div>
+                                <button className="btn btn-sm btn-outline-success ms-1" onClick={() => {
                                     setViewedBusiness(business);
-                                    setForm({ ...form, business_id: business.id });
-                                }} className="bg-theme fw-bold shadow-sm text-white"><PlusOutlined /> Add User</Button>
+                                    setIsAddBranchDialogOpen(true);
+                                    setBranchForm({ ...branchForm, business_id: business.id });
+                                }}>Add Branch +</button>
                             </div>
+
+
                         </div>
                     ))}
                 </div>
+
+                <Dialog
+                    open={isAddBranchDialogOpen}
+                >
+                    <div className="p-4" style={{ borderRadius: "20px", backdropFilter: "blur(10px)" }}>
+                        <div className="flex justify-between">
+                            <div className="fw-bold" style={{ fontSize: "16px" }}>Add Branch to {viewedBusiness?.name}</div>
+                            <button onClick={() => setIsAddBranchDialogOpen(false)} className="text-decoration-none">X</button>
+                        </div>
+                        <div>
+                            <label htmlFor="" className="d-block mt-3">Name</label>
+                            <input type="text" className="inputBox shadow-sm" onChange={(e) => setBranchForm({ ...branchForm, name: e.target.value })} />
+                            <label htmlFor="" className="d-block mt-3">Address</label>
+                            <input type="text" className="inputBox shadow-sm" onChange={(e) => setBranchForm({ ...branchForm, address: e.target.value })} />
+                            <div className="" style={{ width: "350px" }}>
+                                <button className="w-100 bg-theme fw-bold shadow-sm text-white h-[44px] mt-4 rounded-lg" onClick={() => addBranch()}>
+                                    {loading ? <div className="spinner-border spinner-border-sm text-light" role="status"></div> : "Save"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </Dialog>
+
+                <Dialog
+                    open={isSetAdminDialogOpen}
+                >
+                    <div className="p-4" style={{ borderRadius: "20px", backdropFilter: "blur(10px)" }}>
+                        <div className="flex justify-between">
+                            <div className="fw-bold" style={{ fontSize: "16px" }}>Set Admin to {viewedBusiness?.name}</div>
+                            <button onClick={() => setIsSetAdminDialogOpen(false)} className="text-decoration-none">X</button>
+                        </div>
+                        <div>
+                            <label htmlFor="" className="d-block mt-3">Name</label>
+                            <input type="text" className="inputBox shadow-sm" onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                            <label htmlFor="" className="d-block mt-3">Email</label>
+                            <input type="email" className="inputBox shadow-sm" onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                            <label htmlFor="" className="d-block mt-3">Password</label>
+                            <input type="text" className="inputBox shadow-sm" onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                            <div className="" style={{ width: "350px" }}>
+                                <button className="w-100 bg-theme fw-bold shadow-sm text-white h-[44px] mt-4 rounded-lg" onClick={() => addUser()}>
+                                    {loading ? <div className="spinner-border spinner-border-sm text-light" role="status"></div> : "Save"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </Dialog>
 
                 <Dialog
                     open={isAddUserDialogOpen}

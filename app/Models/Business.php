@@ -8,8 +8,12 @@ class Business extends Model
 {
     protected $fillable = ['name','campaign_end_date'];
 
-    public function users(){
+    public function admins(){
         return $this->hasMany(User::class);
+    }
+
+    public function branches(){
+        return $this->hasMany(BusinessBranch::class);
     }
 
 }

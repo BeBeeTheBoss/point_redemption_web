@@ -21,8 +21,6 @@ class NotificationController extends Controller
 
     public function index(Request $request, $id = null)
     {
-        info($id);
-        info($request->user_id);
 
         $data = $this->model->when($id, function ($query) use ($id) {
             $query->where('id', $id);

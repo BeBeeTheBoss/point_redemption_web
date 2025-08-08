@@ -53,7 +53,7 @@ class NotificationController extends Controller
         try {
             $notification = $this->model->create($this->changeToArray($request->all()));
 
-            $this->setNotificationToUser($notification);
+            $this->setNotificationToUser($notification, true);
 
             if ($request->file('image')) {
 
@@ -107,7 +107,7 @@ class NotificationController extends Controller
             $notification->save();
 
             UserNotification::where('notification_id', $notification->id)->delete();
-            $this->setNotificationToUser($notification);
+            $this->setNotificationToUser($notification, false);
 
             if ($request->deleteImage) {
                 Storage::delete('public' . '/notification_images/' . $notification->image);
@@ -148,7 +148,7 @@ class NotificationController extends Controller
 
     }
 
-    private function setNotificationToUser($notification)
+    private function setNotificationToUser($notification, $sendPushNoti)
     {
         $users = User::when($notification->business_id != null, function ($query) use ($notification) {
 
@@ -162,15 +162,17 @@ class NotificationController extends Controller
                 'notification_id' => $notification->id
             ]);
 
-            Http::withHeaders([
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
-            ])->post('https://exp.host/--/api/v2/push/send', [
-                        'to' => $user->push_noti_token,
-                        'sound' => 'default',
-                        'title' => $notification->title,
-                        'body' => $notification->body ?? '',
-                    ]);
+            if ($sendPushNoti) {
+                Http::withHeaders([
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ])->post('https://exp.host/--/api/v2/push/send', [
+                            'to' => $user->push_noti_token,
+                            'sound' => 'default',
+                            'title' => $notification->title,
+                            'body' => $notification->body ?? '',
+                        ]);
+            }
 
         }
     }
