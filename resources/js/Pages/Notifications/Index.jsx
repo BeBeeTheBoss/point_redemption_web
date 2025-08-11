@@ -69,7 +69,7 @@ export default function Histories() {
     const filterNotifications = () => {
 
         setIsFilterDialogOpen(false);
-        if(!filteredBusinessId) return;
+        if (!filteredBusinessId) return;
         setNotifications(props?.notifications?.data.filter(noti => noti.title.toLowerCase().includes(searchKey.toLowerCase()) && noti.business_id === (filteredBusinessId == 'all' ? null : filteredBusinessId)));
     }
 
@@ -116,7 +116,58 @@ export default function Histories() {
                     </div>
                 </div>
 
-                <table className="table shadow-sm mt-3 table-bordered border" style={{ fontSize: "12px" }}>
+                <div className="row bg-white shadow-sm rounded px-2 mt-3 mb-3" style={{ margin: "0px 1px" }}>
+                    <div className="col-1 uppercase fw-bold py-3">Action</div>
+                    <div className="col-2 uppercase fw-bold py-3">Title</div>
+                    <div className="col-3 uppercase fw-bold py-3">Body</div>
+                    <div className="col-1 uppercase fw-bold py-3">Image</div>
+                    <div className="col-2 uppercase fw-bold py-3 flex">TO
+                        <div className="py-1 px-1 cursor-pointer" onClick={() => setIsFilterDialogOpen(true)} style={{ position: "relative" }}>
+                            <img className="ms-1 cursor-pointer" src="/images/sort.png" style={{ width: "15px", height: "15px",marginTop:"-3px" }} />
+                            {filteredBusinessId && <div className="badge bg-danger" style={{ position: "absolute", top: "0px", right: "-3px", fontSize: "6px" }}>
+                                1
+                            </div>}
+                        </div></div>
+                    <div className="col-2 uppercase fw-bold py-3">Date</div>
+                </div>
+
+                {notifications.map((notification) => (
+                    <div key={notification.id} className="row bg-white shadow-sm rounded px-2 mt-2" style={{ margin: "0px 1px" }}>
+                        <div className="col-1 uppercase fw-bold py-3">
+                            <Link href={'/notifications/edit/' + notification.id} className={'text-decoration-none'}>
+                                <button className="me-1 bg-primary" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
+                                    <EditOutlined />
+                                </button>
+                            </Link>
+                            <button className="bg-danger" onClick={() => {
+                                setIsModalOpen(true)
+                                setNotiIdForDelete(notification.id)
+                            }} style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
+                                <DeleteOutlined />
+                            </button>
+                        </div>
+                        <div className="col-2 py-3">
+                            {notification.title}
+                        </div>
+                        <div className="col-3 py-3">
+                            {notification.body}
+                        </div>
+                        <div className="col-1 py-3">
+                            {notification.image && <img src={notification.image} onClick={() => {
+                                setIsDialogOpen(true);
+                                setViewedImage(notification.image);
+                            }} className="border-0 cursor-pointer" style={{ width: "50px", height: "50px", objectFit: "cover", objectPosition: "center" }} />}
+                        </div>
+                        <div className="col-2 py-3">
+                            {notification.to}
+                        </div>
+                        <div className="col-2 py-3">
+                            {new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(notification.created_at))}
+                        </div>
+                    </div>
+                ))}
+
+                {/* <table className="table shadow-sm mt-3 table-bordered border" style={{ fontSize: "12px" }}>
                     <thead className="">
                         <tr className="" style={{ color: "#A2A4AE" }}>
                             <th className="py-3">ACTION</th>
@@ -136,7 +187,7 @@ export default function Histories() {
                             <th className="py-3">DATE</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="">
                         {notifications.map((notification) => (
                             <tr key={notification.id}>
                                 <td className="col-1 text-start">
@@ -172,7 +223,7 @@ export default function Histories() {
                             </tr>
                         ))}
                     </tbody>
-                </table>
+                </table> */}
 
                 <Modal
                     title="Confirm Delete"

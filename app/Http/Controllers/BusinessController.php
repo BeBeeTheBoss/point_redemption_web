@@ -15,7 +15,9 @@ class BusinessController extends Controller
     public function businessesPage(){
 
         $businesses = Business::with('admins')->with('branches',function($query){
-            $query->with('users');
+            $query->with('users',function($query){
+                $query->orderBy('id', 'asc');
+            })->orderBy('id', 'asc');
         })->orderBy('id', 'desc')->get();
 
         return Inertia::render('Businesses/Index',[
@@ -60,11 +62,15 @@ class BusinessController extends Controller
         $request->validate([
             'id' => 'required',
             'name' => 'required',
+            'short_name' => 'required',
+            'campaign_start_date' => 'required',
             'campaign_end_date' => 'required'
         ]);
 
         $business = $this->model->find($request->id);
         $business->name = $request->name;
+        $business->short_name = $request->short_name;
+        $business->campaign_start_date = Carbon::parse($request->campaign_start_date)->addDay();
         $business->campaign_end_date = Carbon::parse($request->campaign_end_date)->addDay();
         $business->save();
 

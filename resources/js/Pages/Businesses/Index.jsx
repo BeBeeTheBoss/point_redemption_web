@@ -1,7 +1,7 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { usePage, Link, router } from "@inertiajs/react";
 import { Breadcrumb, Button, Popconfirm, Switch } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { PlusOutlined, EditOutlined, DeleteOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Dialog from '@mui/material/Dialog';
@@ -23,6 +23,7 @@ export default function Histories() {
     const [businesses, setBusinesses] = useState(null);
     const [isAddUserDialogOpen, setIsAddUserDialogOpen] = useState(false);
     const [isAddBranchDialogOpen, setIsAddBranchDialogOpen] = useState(false);
+    const [isEditBranchDialogOpen, setIsEditBranchDialogOpen] = useState(false);
     const [isSetAdminDialogOpen, setIsSetAdminDialogOpen] = useState(false);
     const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -46,6 +47,12 @@ export default function Histories() {
         name: '',
         address: '',
         business_id: '',
+    });
+
+    const [branchEditForm, setBranchEditForm] = useState({
+        id: '',
+        name: '',
+        address: '',
     });
 
 
@@ -163,9 +170,6 @@ export default function Histories() {
 
     const addBranch = () => {
 
-        console.log(branchForm);
-
-
         setLoading(true);
 
         router.post('/branches', branchForm, {
@@ -184,6 +188,52 @@ export default function Histories() {
                 }
             }
         });
+    }
+
+    const updateBranch = () => {
+
+        setLoading(true);
+
+        router.post('/branches/update', branchEditForm, {
+            onSuccess: (response) => {
+                setIsEditBranchDialogOpen(false);
+                setLoading(false);
+            },
+            onError: (errors) => {
+                setLoading(false);
+                if (errors.name) {
+                    toast.error(errors.name);
+                }
+
+                if (errors.address) {
+                    toast.error(errors.address);
+                }
+            }
+        });
+
+    }
+
+    const deleteBranch = (id) => {
+
+        setLoading(true);
+
+        router.delete('/branches', { data: { id: id } }, {
+            onSuccess: (response) => {
+                setIsEditBranchDialogOpen(false);
+                setLoading(false);
+            },
+            onError: (errors) => {
+                setLoading(false);
+                if (errors.name) {
+                    toast.error(errors.name);
+                }
+
+                if (errors.address) {
+                    toast.error(errors.address);
+                }
+            }
+        });
+
     }
 
     return (
@@ -249,9 +299,11 @@ export default function Histories() {
                                 <div className="flex items-center">  <span className=" ">{business.campaign_start_date}</span> <img src="/images/arrow-right.png" className="mx-2" style={{ width: "17px" }} /> <span className="">{business.campaign_end_date}</span></div>
                                 <div className="flex">
                                     <Switch color="danger" checked={business.is_active} onChange={(e) => toggleBusiness(business.id)} className="me-2" />
-                                    <button className="me-1 bg-primary" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
-                                        <EditOutlined />
-                                    </button>
+                                    <Link href={`/businesses/edit/${business.id}`}>
+                                        <button className="me-1 bg-primary" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
+                                            <EditOutlined />
+                                        </button>
+                                    </Link>
                                     <button className="bg-danger" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
                                         <DeleteOutlined />
                                     </button>
@@ -281,12 +333,19 @@ export default function Histories() {
 
                                     {business?.admins[0] ? (
                                         <>
-                                            <button className="me-1 bg-primary" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
+                                            <button className="me-1 bg-primary" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }} onClick={() => setUserData(business?.admins[0])}>
                                                 <EditOutlined />
                                             </button>
-                                            <button className="bg-danger" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
-                                                <DeleteOutlined />
-                                            </button>
+                                            <Popconfirm
+                                                title="Delete this user"
+                                                description="Are you sure to delete this user?"
+                                                onConfirm={() => deleteUser(business?.admins[0].id)}
+                                                icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+                                            >
+                                                <button className="bg-danger" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
+                                                    <DeleteOutlined />
+                                                </button>
+                                            </Popconfirm>
                                         </>
                                     ) : (
                                         <button className="btn btn-outline-secondary btn-sm" onClick={() => {
@@ -313,15 +372,39 @@ export default function Histories() {
                                                         <div className="ms-3" style={{ fontSize: "10px" }}>{branch.address}</div>
                                                     </div>
                                                 </div>
-                                                <div className="text-secondary">
-                                                    {branch.users.length} users
+                                                <div className="flex items-center ms-5">
+                                                    <button onClick={() => {
+                                                        setBranchEditForm({ ...branchEditForm, id: branch.id, name: branch.name, address: branch.address });
+                                                        setIsEditBranchDialogOpen(true);
+                                                    }} className="me-1 bg-primary" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
+                                                        <EditOutlined />
+                                                    </button>
+                                                    <Popconfirm
+                                                        title="Delete this branch"
+                                                        description="Are you sure to delete this branch?"
+                                                        onConfirm={() => deleteBranch(branch.id)}
+                                                        icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+                                                    >
+                                                        <button className="bg-danger" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
+                                                            <DeleteOutlined />
+                                                        </button>
+                                                    </Popconfirm>
+
+
                                                 </div>
                                             </div>
-                                            <div className="mt-3 flex justify-between items-center">Branch Users <button className="btn btn-sm btn-primary" onClick={() => {
-                                                setIsAddUserDialogOpen(true);
-                                                setViewedBusiness(business);
-                                                setForm({ ...form, business_id: null, branch_id: branch.id });
-                                            }}>Add user</button> </div>
+                                            <div className="mt-3 flex justify-between items-center">
+
+                                                <div>
+                                                    Branch Users <span className="fw-normal text-success ms-1"> | {branch.users.length} {branch.users.length > 1 ? "users" : "user"}</span>
+                                                </div>
+
+                                                <button className="btn btn-sm btn-primary" onClick={() => {
+                                                    setIsAddUserDialogOpen(true);
+                                                    setViewedBusiness(business);
+                                                    setForm({ ...form, business_id: null, branch_id: branch.id });
+                                                }}>Add user</button>
+                                            </div>
 
                                             {branch.users.length > 0 ? (
                                                 branch.users.map((user) => (
@@ -333,12 +416,21 @@ export default function Histories() {
                                                             </div>
                                                         </div>
                                                         <div className="flex items-center pt-3 ms-5">
-                                                            <button className="me-1 bg-primary" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
+                                                            <button onClick={() => setUserData(user)} className="me-1 bg-primary" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
                                                                 <EditOutlined />
                                                             </button>
-                                                            <button className="bg-danger" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
-                                                                <DeleteOutlined />
-                                                            </button>
+                                                            <Popconfirm
+                                                                title="Delete this user"
+                                                                description="Are you sure to delete this user?"
+                                                                onConfirm={() => deleteUser(user.id)}
+                                                                icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+                                                            >
+                                                                <button className="bg-danger" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
+                                                                    <DeleteOutlined />
+                                                                </button>
+                                                            </Popconfirm>
+
+
                                                         </div>
                                                     </div>
                                                 ))
@@ -402,6 +494,28 @@ export default function Histories() {
                             <input type="text" className="inputBox shadow-sm" onChange={(e) => setForm({ ...form, password: e.target.value })} />
                             <div className="" style={{ width: "350px" }}>
                                 <button className="w-100 bg-theme fw-bold shadow-sm text-white h-[44px] mt-4 rounded-lg" onClick={() => addUser()}>
+                                    {loading ? <div className="spinner-border spinner-border-sm text-light" role="status"></div> : "Save"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </Dialog>
+
+                <Dialog
+                    open={isEditBranchDialogOpen}
+                >
+                    <div className="p-4" style={{ borderRadius: "20px", backdropFilter: "blur(10px)" }}>
+                        <div className="flex justify-between">
+                            <div className="fw-bold" style={{ fontSize: "16px" }}>Add Branch to {viewedBusiness?.name}</div>
+                            <button onClick={() => setIsEditBranchDialogOpen(false)} className="text-decoration-none">X</button>
+                        </div>
+                        <div>
+                            <label htmlFor="" className="d-block mt-3">Name</label>
+                            <input type="text" value={branchEditForm.name} className="inputBox shadow-sm" onChange={(e) => setBranchEditForm({ ...branchEditForm, name: e.target.value })} />
+                            <label htmlFor="" className="d-block mt-3">Address</label>
+                            <input type="text" value={branchEditForm.address} className="inputBox shadow-sm" onChange={(e) => setBranchEditForm({ ...branchEditForm, address: e.target.value })} />
+                            <div className="" style={{ width: "350px" }}>
+                                <button className="w-100 bg-theme fw-bold shadow-sm text-white h-[44px] mt-4 rounded-lg" onClick={() => updateBranch()}>
                                     {loading ? <div className="spinner-border spinner-border-sm text-light" role="status"></div> : "Save"}
                                 </button>
                             </div>

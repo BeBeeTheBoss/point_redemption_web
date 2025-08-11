@@ -40,9 +40,9 @@ export default function AuthenticatedLayout({ children }) {
                 }
                 `}
             </style>
-            <div className="container-fluid min-h-screen" style={{ fontSize: "13px",backgroundColor: "#F3F4F6" }}>
+            <div className="container-fluid min-h-screen" style={{ fontSize: "13px", backgroundColor: "#F3F4F6" }}>
                 <div className="row">
-                    <div className="col-2" style={{ position: "fixed", height: "100vh", position: "relative" }}>
+                    <div className="col-2" style={{ position: "fixed", height: "100vh" }}>
                         <div className="bg-theme rounded shadow-sm p-2 px-3" style={{ marginLeft: "-6px", marginTop: "5px", height: "98.5vh" }}>
                             <div className="text-white brand fw-bold text-center" style={{ borderBottom: "1px solid #dfdfdf65", paddingBottom: "25px", marginTop: "18px" }}>
                                 <BarChartOutlined style={{ fontSize: "20px", marginRight: "1px" }} /> Admin Dashboard

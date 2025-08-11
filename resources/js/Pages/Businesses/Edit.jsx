@@ -16,6 +16,8 @@ export default function Create() {
     const [form, setForm] = useState({
         id: '',
         name: '',
+        short_name: '',
+        campaign_start_date: '',
         campaign_end_date: ''
     });
 
@@ -23,6 +25,8 @@ export default function Create() {
         setForm({
             id: props.business.id,
             name: props.business.name,
+            short_name: props.business.short_name,
+            campaign_start_date: dayjs(props.business.campaign_start_date, 'YYYY-MM-DD'),
             campaign_end_date: dayjs(props.business.campaign_end_date, 'YYYY-MM-DD')
         });
     }, []);
@@ -34,6 +38,8 @@ export default function Create() {
         const data = {
             id: form.id,
             name: form.name,
+            short_name: form.short_name,
+            campaign_start_date: new Date(form.campaign_start_date).toISOString().split('T')[0],
             campaign_end_date: new Date(form.campaign_end_date).toISOString().split('T')[0]
         }
 
@@ -96,6 +102,15 @@ export default function Create() {
                             <label className="mt-3 mb-2">Name</label>
                             <div>
                                 <input type="text" className="inputBox" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Enter name" />
+                            </div>
+                            <label className="mt-3 mb-2" style={{ fontSize: 15 }}>Short name</label>
+                            <div>
+                                <input type="text" className="inputBox" value={form.short_name} onChange={(e) => setForm({ ...form, short_name: e.target.value })} placeholder="Enter short name" />
+                                <div className="text-warning text-wrap w-[350px] mt-1">* Only fill in the short name that was placed at the beginning of the promotion name. *</div>
+                            </div>
+                            <label className="mt-3 mb-2">Campaign start date</label>
+                            <div>
+                                <DatePicker value={form.campaign_start_date} onChange={(e) => setForm({ ...form, campaign_start_date: e })} style={{ width: "100%", height: "44px" }} />
                             </div>
                             <label className="mt-3 mb-2">Campaign end date</label>
                             <div>

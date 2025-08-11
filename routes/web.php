@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\BusinessBranchController;
+use App\Http\Controllers\BusinessBranchController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\HistoryController;
@@ -48,6 +48,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::group(['prefix' => 'branches', 'controller' => BusinessBranchController::class],function(){
         Route::post('/','store')->name('createBranch');
+        Route::post('/update','update')->name('updateBranch');
+        Route::delete('/','destroy')->name('deleteBranch');
     });
 
 });

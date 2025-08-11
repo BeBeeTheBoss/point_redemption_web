@@ -51,6 +51,10 @@ class User extends Authenticatable
         ];
     }
 
+    public function branch(){
+        return $this->belongsTo(BusinessBranch::class);
+    }
+
     public function business(){
         return $this->belongsTo(Business::class);
     }

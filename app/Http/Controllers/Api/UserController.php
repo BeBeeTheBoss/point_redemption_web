@@ -27,6 +27,7 @@ class UserController extends Controller
 
         if ($id) {
             $user = $this->model->find($id);
+            info($user->toArray());
             $user['token'] = $user->createToken(env('APP_NAME') . '_Token')->plainTextToken;
             return sendResponse(new UserResource($user), 200);
         } else {
@@ -80,7 +81,6 @@ class UserController extends Controller
 
         info($request->all());
 
-
         if ($request->missing(['idcard', 'points'])) {
             return sendResponse(null, 400, "Invalid QR code");
         }
@@ -94,46 +94,54 @@ class UserController extends Controller
             return sendResponse(null, 404, "Member not found");
         }
 
-        $pos_db = getPosDBConnectionByBranchCode($member_info->branch_code);
-        $promotion_info = $pos_db->table('gold_exchange.point_exchange_promotion_item')
-            ->where('point_exchange_promotion_no', $request->promotion_code)
-            ->first();
-
-        if (!$promotion_info) {
-            return sendResponse(null, 404, "Promotion not found");
-        }
-
-        History::create([
-            'member_idcard' => $request->idcard,
-            'member_name' => $member_info->fullname,
-            'promotion_code' => $request->promotion_code,
-            'promotion_name' => $promotion_info->point_exchange_promotion_item_goodname,
-            'qty' => $request->qty,
-            'redeemed_points' => $request->points,
-            'redeemed_date' => now()
-        ]);
-
-        $recent_doc_no = $pos_db->table('gold_exchange.point_exchange_doc')->where('point_exchange_doc_branch', $member_info->branch_code)->pluck('point_exchange_doc_no')->last();
-
-        $dateString = explode('-', $recent_doc_no)[2];
-        $formattedDate = DateTime::createFromFormat('ymd', $dateString)->format('Y-m-d');
-
-        $today = Carbon::now()->format('Y-m-d');
-
-        $branch_info = Branch::where('branch_code', $member_info->branch_code)->first();
-        $branch_short_name = $branch_info->branch_short_name;
-
-        if ($formattedDate != $today) {
-            $docuno = $this->generateNewDocNo($branch_short_name);
-        } else {
-            $number = explode('-', $recent_doc_no)[3];
-            $number++;
-            $number = str_pad($number, 4, '0', STR_PAD_LEFT);
-            $docuno = implode('-', array_slice(explode('-', $recent_doc_no), 0, -1));
-            $docuno = "$docuno-$number";
-        }
-
+        DB::beginTransaction();
         try {
+
+            $pos_db = getPosDBConnectionByBranchCode($member_info->branch_code);
+            $promotion_info = $pos_db->table('gold_exchange.point_exchange_promotion_item')
+                ->where('point_exchange_promotion_no', $request->promotion_code)
+                ->first();
+
+            if (!$promotion_info) {
+                return sendResponse(null, 404, "Promotion not found");
+            }
+
+            History::create([
+                'member_idcard' => $request->idcard,
+                'member_name' => $member_info->fullname,
+                'promotion_code' => $request->promotion_code,
+                'promotion_name' => $promotion_info->point_exchange_promotion_item_goodname,
+                'qty' => $request->qty,
+                'redeemed_points' => $request->points,
+                'redeemed_date' => now(),
+                'business_id' => Auth::user()->branch->business->id,
+                'branch_id' => Auth::user()->branch->id
+            ]);
+
+            info($member_info->branch_code);
+
+            $recent_doc_no = $pos_db->table('gold_exchange.point_exchange_doc')->where('point_exchange_doc_branch', $member_info->branch_code)->orderByRaw("point_exchange_doc_datenow DESC")->value('point_exchange_doc_no');
+
+            info($recent_doc_no);
+
+            $dateString = explode('-', $recent_doc_no)[2];
+            $formattedDate = DateTime::createFromFormat('ymd', $dateString)->format('Y-m-d');
+
+            $today = Carbon::now()->format('Y-m-d');
+
+            $branch_info = Branch::where('branch_code', $member_info->branch_code)->first();
+            $branch_short_name = $branch_info->branch_short_name;
+
+            if ($formattedDate != $today) {
+                $docuno = $this->generateNewDocNo($branch_short_name);
+            } else {
+                $number = explode('-', $recent_doc_no)[3];
+                $number++;
+                $number = str_pad($number, 4, '0', STR_PAD_LEFT);
+                $docuno = implode('-', array_slice(explode('-', $recent_doc_no), 0, -1));
+                $docuno = "$docuno-$number";
+            }
+
             $idcard = $request->idcard;
             $points = $request->points;
 
@@ -232,9 +240,12 @@ class UserController extends Controller
 
             }
 
+            DB::commit();
+
             return sendResponse(null, 200, "Points redeemed successfully");
 
         } catch (\Exception $e) {
+            DB::rollBack();
             return sendResponse(null, 400, $e->getMessage());
         }
 

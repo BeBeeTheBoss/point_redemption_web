@@ -32,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::group(['prefix' => 'histories','controller' => HistoryController::class],function(){
         Route::get('/', 'index');
+        Route::get('/{id?}', 'show');
     });
 
 });

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\UserNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -33,6 +34,7 @@ class UserController extends Controller
     public function destroy(Request $request){
 
         $user = $this->model->find($request->id);
+        UserNotification::where('user_id', $user->id)->delete();
         $user->delete();
 
         return redirect()->route('businessesPage')->with('success', 'User deleted');

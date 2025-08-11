@@ -152,7 +152,14 @@ class NotificationController extends Controller
     {
         $users = User::when($notification->business_id != null, function ($query) use ($notification) {
 
-            $query->where('business_id', $notification->business_id);
+            $query->where(function ($q) use ($notification) {
+                $q->where('business_id', $notification->business_id)
+                    ->orWhereHas('branch', function ($q) use ($notification) {
+                        $q->whereHas('business', function ($q) use ($notification) {
+                            $q->where('id', $notification->business_id);
+                        });
+                    });
+            });
 
         })->get();
 
