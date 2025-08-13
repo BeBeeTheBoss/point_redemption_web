@@ -2,7 +2,7 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Breadcrumb } from "antd";
 import { usePage, Link, router } from "@inertiajs/react";
 import { Button, Select, Spin, DatePicker } from "antd";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PlusOutlined, LoadingOutlined, FileImageOutlined } from "@ant-design/icons";
 import { toast } from "react-toastify";
 
@@ -11,10 +11,11 @@ export default function Create() {
     const { url, props } = usePage();
     const currentRoute = url.split('/').pop();
 
+    const [promotions, setPromotions] = useState([]);
     const [loading, setLoading] = useState(false);
     const [form, setForm] = useState({
         name: '',
-        short_name: '',
+        promotions: [],
         campaign_end_date: '',
         campaign_start_date: ''
     });
@@ -32,6 +33,10 @@ export default function Create() {
                     toast.error(errors.name);
                 }
 
+                if (errors.campaign_start_date) {
+                    toast.error(errors.campaign_start_date);
+                }
+
                 if (errors.campaign_end_date) {
                     toast.error(errors.campaign_end_date);
                 }
@@ -41,11 +46,26 @@ export default function Create() {
 
     }
 
+    useEffect(() => {
+
+        setPromotions(props.promotions);
+
+    }, []);
+
+    const handleChangePromotions = (e) => {
+
+        setForm({
+            ...form,
+            promotions: e
+        });
+
+    }
+
     return (
         <>
             <style>{`
                 .inputBox{
-                    width: 350px !important;
+                    width: 380px !important;
                     border-color: #00000042;
                     height: 44px;
                     border-radius: 7px;
@@ -82,10 +102,19 @@ export default function Create() {
                             <div>
                                 <input type="text" className="inputBox" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Enter name" />
                             </div>
-                            <label className="mt-3 mb-2" style={{ fontSize: 15 }}>Short name</label>
+                            <label htmlFor="" className="mt-3 mb-2" style={{ fontSize: 15 }}>Promotions</label>
                             <div>
-                                <input type="text" className="inputBox" value={form.short_name} onChange={(e) => setForm({ ...form, short_name: e.target.value })} placeholder="Enter short name" />
-                                <div className="text-warning text-wrap w-[350px] mt-1">* Only fill in the short name that was placed at the beginning of the promotion name. *</div>
+                                <Select
+                                    mode="multiple"
+                                    allowClear
+                                    style={{ width:380 }}
+                                    placeholder="Please select"
+                                    onChange={handleChangePromotions}
+                                    options={promotions.map((promotion) => ({
+                                        value: promotion.point_exchange_promotion_pro_no,
+                                        label: promotion.point_exchange_promotion_pro_no,
+                                    }))}
+                                />
                             </div>
                             <label className="mt-3 mb-2" style={{ fontSize: 15 }}>Campaign start date</label>
                             <div>

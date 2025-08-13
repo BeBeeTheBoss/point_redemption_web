@@ -16,4 +16,8 @@ class Business extends Model
         return $this->hasMany(BusinessBranch::class);
     }
 
+    public function promotions(){
+        return $this->hasMany(BusinessPromotion::class);
+    }
+
 }

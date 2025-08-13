@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\BusinessPromotion;
 use DateTime;
 use Carbon\Carbon;
 use App\Models\User;
@@ -94,10 +95,14 @@ class UserController extends Controller
             return sendResponse(null, 404, "Member not found");
         }
 
+        $pos_db = getPosDBConnectionByBranchCode($member_info->branch_code);
+
+
         DB::beginTransaction();
+        $cloud_db->beginTransaction();
+        $pos_db->beginTransaction();
         try {
 
-            $pos_db = getPosDBConnectionByBranchCode($member_info->branch_code);
             $promotion_info = $pos_db->table('gold_exchange.point_exchange_promotion_item')
                 ->where('point_exchange_promotion_no', $request->promotion_code)
                 ->first();
@@ -105,6 +110,13 @@ class UserController extends Controller
             if (!$promotion_info) {
                 return sendResponse(null, 404, "Promotion not found");
             }
+
+            $valid_promotions = BusinessPromotion::where('business_id', Auth::user()->branch->business->id)->pluck('promotion_code')->toArray();
+
+            if (!in_array($request->promotion_code, $valid_promotions)) {
+                return sendResponse(null, 404, "Not allowed to redeem this promotion");
+            }
+
 
             History::create([
                 'member_idcard' => $request->idcard,
@@ -134,6 +146,7 @@ class UserController extends Controller
 
             if ($formattedDate != $today) {
                 $docuno = $this->generateNewDocNo($branch_short_name);
+                info($docuno);
             } else {
                 $number = explode('-', $recent_doc_no)[3];
                 $number++;
@@ -184,9 +197,11 @@ class UserController extends Controller
                     $number = explode('-', $docuno)[3];
                     $number++;
                     $number = str_pad($number, 4, '0', STR_PAD_LEFT);
-                    $docuno = implode('-', array_slice(explode('-', $recent_doc_no), 0, -1));
+                    $docuno = implode('-', array_slice(explode('-', $docuno), 0, -1));
                     $docuno = "$docuno-$number";
                 }
+
+                info($docuno);
 
                 $pos_db->table('gold_exchange.point_exchange_doc')->insert([
                     'point_exchange_doc_id' => $pos_db->table('gold_exchange.point_exchange_doc')->max('point_exchange_doc_id') + 1,
@@ -241,12 +256,18 @@ class UserController extends Controller
             }
 
             DB::commit();
+            $cloud_db->commit();
+            $pos_db->commit();
 
             return sendResponse(null, 200, "Points redeemed successfully");
 
         } catch (\Exception $e) {
+
             DB::rollBack();
-            return sendResponse(null, 400, $e->getMessage());
+            $cloud_db->rollBack();
+            $pos_db->rollBack();
+
+            return sendResponse(null, 400, 'Something went wrong!, please try again');
         }
 
     }

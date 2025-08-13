@@ -16,16 +16,17 @@ export default function Create() {
     const [form, setForm] = useState({
         id: '',
         name: '',
-        short_name: '',
+        promotions: '',
         campaign_start_date: '',
         campaign_end_date: ''
     });
 
     useEffect(() => {
+
         setForm({
             id: props.business.id,
             name: props.business.name,
-            short_name: props.business.short_name,
+            promotions: props.business.promotions,
             campaign_start_date: dayjs(props.business.campaign_start_date, 'YYYY-MM-DD'),
             campaign_end_date: dayjs(props.business.campaign_end_date, 'YYYY-MM-DD')
         });
@@ -38,11 +39,10 @@ export default function Create() {
         const data = {
             id: form.id,
             name: form.name,
-            short_name: form.short_name,
+            promotions: form.promotions,
             campaign_start_date: new Date(form.campaign_start_date).toISOString().split('T')[0],
             campaign_end_date: new Date(form.campaign_end_date).toISOString().split('T')[0]
         }
-
 
         router.post('/businesses/update', data, {
             onError: (errors) => {
@@ -53,11 +53,27 @@ export default function Create() {
                     toast.error(errors.name);
                 }
 
+                if (errors.campaign_start_date) {
+                    toast.error(errors.campaign_start_date);
+                }
+
                 if (errors.campaign_end_date) {
                     toast.error(errors.campaign_end_date);
                 }
 
             }
+        });
+
+    }
+
+    const handleChangePromotions = (e) => {
+
+        console.log(e);
+
+
+        setForm({
+            ...form,
+            promotions: e
         });
 
     }
@@ -103,10 +119,20 @@ export default function Create() {
                             <div>
                                 <input type="text" className="inputBox" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Enter name" />
                             </div>
-                            <label className="mt-3 mb-2" style={{ fontSize: 15 }}>Short name</label>
+                            <label htmlFor="" className="mt-3 mb-2" style={{ fontSize: 15 }}>Promotions</label>
                             <div>
-                                <input type="text" className="inputBox" value={form.short_name} onChange={(e) => setForm({ ...form, short_name: e.target.value })} placeholder="Enter short name" />
-                                <div className="text-warning text-wrap w-[350px] mt-1">* Only fill in the short name that was placed at the beginning of the promotion name. *</div>
+                                <Select
+                                    mode="multiple"
+                                    allowClear
+                                    style={{ width: 380 }}
+                                    placeholder="Please select"
+                                    value={form?.promotions}
+                                    onChange={handleChangePromotions}
+                                    options={props.promotions?.map((promotion) => ({
+                                        value: promotion.point_exchange_promotion_pro_no,
+                                        label: promotion.point_exchange_promotion_pro_no,
+                                    }))}
+                                />
                             </div>
                             <label className="mt-3 mb-2">Campaign start date</label>
                             <div>

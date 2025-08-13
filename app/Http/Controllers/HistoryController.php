@@ -12,6 +12,7 @@ class HistoryController extends Controller
 
     public function historiesPage(){
 
+        // $histories = History::with('business','branch')->all();
         return Inertia::render('Histories/Index');
     }
 

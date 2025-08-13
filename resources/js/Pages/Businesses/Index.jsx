@@ -304,9 +304,17 @@ export default function Histories() {
                                             <EditOutlined />
                                         </button>
                                     </Link>
-                                    <button className="bg-danger" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
-                                        <DeleteOutlined />
-                                    </button>
+                                    <Popconfirm
+                                        title="Delete this user"
+                                        description="Are you sure to delete this user?"
+                                        onConfirm={() => deleteBusiness(business?.id)}
+                                        icon={<QuestionCircleOutlined style={{ color: 'red' }} />}
+                                    >
+                                        <button className="bg-danger" style={{ width: "20px", height: "20px", color: "white", borderRadius: "4px" }}>
+                                            <DeleteOutlined />
+                                        </button>
+                                    </Popconfirm>
+
                                 </div>
                             </div>
 
