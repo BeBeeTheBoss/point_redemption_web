@@ -13,9 +13,20 @@ class HistoryController extends Controller
 {
     public function __construct(protected History $model){}
 
-    public function index(){
+    public function index(Request $request){
 
-        $histories = $this->model->orderBy('id','desc')->get();
+        if($request->from == 'search' && $request->searchKey == null){
+            return sendResponse([], 200);
+        }
+
+        $searchKey = $request->searchKey;
+
+        $histories = $this->model->orderBy('id','desc')->when($searchKey,function($query) use ($searchKey){
+            $query->where(function ($query) use ($searchKey) {
+                $query->whereRaw('LOWER(member_name) LIKE ?', ['%' . strtolower($searchKey) . '%'])
+                      ->orWhereRaw('LOWER(promotion_name) LIKE ?', ['%' . strtolower($searchKey) . '%']);
+            });
+        })->get();
 
         return sendResponse(HistoryResource::collection($histories), 200);
     }
