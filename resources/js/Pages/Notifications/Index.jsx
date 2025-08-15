@@ -117,18 +117,18 @@ export default function Histories() {
                 </div>
 
                 <div className="row bg-white shadow-sm rounded px-2 mt-3 mb-3" style={{ margin: "0px 1px" }}>
-                    <div className="col-1 uppercase fw-bold py-3">Action</div>
-                    <div className="col-2 uppercase fw-bold py-3">Title</div>
-                    <div className="col-3 uppercase fw-bold py-3">Body</div>
-                    <div className="col-1 uppercase fw-bold py-3">Image</div>
-                    <div className="col-2 uppercase fw-bold py-3 flex">TO
+                    <div className="col-1 uppercase text-muted py-3">Action</div>
+                    <div className="col-2 uppercase text-muted py-3">Title</div>
+                    <div className="col-3 uppercase text-muted py-3">Body</div>
+                    <div className="col-1 uppercase text-muted py-3">Image</div>
+                    <div className="col-2 uppercase text-muted py-3 flex">TO
                         <div className="py-1 px-1 cursor-pointer" onClick={() => setIsFilterDialogOpen(true)} style={{ position: "relative" }}>
                             <img className="ms-1 cursor-pointer" src="/images/sort.png" style={{ width: "15px", height: "15px",marginTop:"-3px" }} />
                             {filteredBusinessId && <div className="badge bg-danger" style={{ position: "absolute", top: "0px", right: "-3px", fontSize: "6px" }}>
                                 1
                             </div>}
                         </div></div>
-                    <div className="col-2 uppercase fw-bold py-3">Date</div>
+                    <div className="col-2 uppercase text-muted py-3">Date</div>
                 </div>
 
                 {notifications.map((notification) => (

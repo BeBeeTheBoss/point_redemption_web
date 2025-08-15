@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use Inertia\Inertia;
 use App\Models\History;
 use App\Models\Business;
@@ -14,7 +15,7 @@ class HistoryController extends Controller
 
     public function historiesPage(){
 
-        $histories = History::orderBy('id', 'desc')->get();
+        $histories = History::whereMonth('created_at', Carbon::now()->month)->orderBy('id', 'desc')->get();
         $pos_db = getPosDBConnectionByBranchCode('MM-101');
 
         $promotions_count = $pos_db->table('gold_exchange.point_exchange_promotion')

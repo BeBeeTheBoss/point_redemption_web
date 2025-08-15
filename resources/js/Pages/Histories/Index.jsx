@@ -60,8 +60,8 @@ export default function Histories() {
                         </div>
                     </div>
                 </div>
-                <div className="fs-5 fw-bold mt-4 mb-3">Histories</div>
-                <div className="shadow mt-2 mx-2 mb-1">
+                <div className="fw-bold mt-4 mb-3" style={{ fontSize: "18px" }}>Histories</div>
+                <div className="shadow mt-2 mx-2 mb-3">
                     <div className="row p-3 bg-white border" style={{ borderTopLeftRadius: 10, borderTopRightRadius: 10 }}>
                         <div className="col-2 text-center text-muted">MEMBER</div>
                         <div className="col-4 text-center text-muted">PROMOTION</div>

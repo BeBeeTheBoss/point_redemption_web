@@ -24,6 +24,8 @@ class HistoryController extends Controller
         }
 
         $searchKey = $request->searchKey;
+        $filterBy = $request->filterBy;
+        info($request->all());
         $auth_user_business_id = Auth::user()->role == 'admin' ? Auth::user()->business->id : Auth::user()->branch->business->id;
         info($auth_user_business_id);
 
@@ -32,7 +34,15 @@ class HistoryController extends Controller
                 $query->whereRaw('LOWER(member_name) LIKE ?', ['%' . strtolower($searchKey) . '%'])
                     ->orWhereRaw('LOWER(promotion_name) LIKE ?', ['%' . strtolower($searchKey) . '%']);
             });
-        })->get();
+        })
+        ->when($filterBy,function($query) use($filterBy){
+            if($filterBy == 'This month'){
+                $query->whereMonth('created_at', Carbon::now()->month);
+            }else if($filterBy == 'This day'){
+                $query->whereDay('created_at', Carbon::now()->day);
+            }
+        })
+        ->get();
 
         return sendResponse(HistoryResource::collection($histories), 200);
     }
