@@ -25,6 +25,8 @@ class AuthController extends Controller
     public function login(Request $request)
     {
 
+        info($request->toArray());
+
         $user = User::where('email', $request->email)->first();
         if (!$user) {
             return back()->withErrors('Please check your email');
@@ -33,6 +35,12 @@ class AuthController extends Controller
         if (!Hash::check($request->password, $user->password)) {
             return back()->withErrors('Please check your password');
         }
+
+        if($user->role != 'super_admin'){
+            return back()->withErrors('You are not admin');
+        }
+
+        info($user->toArray());
 
         Auth::loginUsingId($user->id);
 

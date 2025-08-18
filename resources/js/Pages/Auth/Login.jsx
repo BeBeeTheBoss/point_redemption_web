@@ -2,6 +2,7 @@ import { useState } from "react";
 import { router } from "@inertiajs/react";
 import { usePage } from '@inertiajs/react';
 import { useEffect } from "react";
+import { toast } from "react-toastify";
 
 export default function Login() {
     const [email, setEmail] = useState('');

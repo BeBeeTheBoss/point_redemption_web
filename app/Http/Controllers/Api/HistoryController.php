@@ -25,9 +25,7 @@ class HistoryController extends Controller
 
         $searchKey = $request->searchKey;
         $filterBy = $request->filterBy;
-        info($request->all());
         $auth_user_business_id = Auth::user()->role == 'admin' ? Auth::user()->business->id : Auth::user()->branch->business->id;
-        info($auth_user_business_id);
 
         $histories = $this->model->where('business_id', $auth_user_business_id)->orderBy('id', 'desc')->when($searchKey, function ($query) use ($searchKey) {
             $query->where(function ($query) use ($searchKey) {

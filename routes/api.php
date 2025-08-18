@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\HistoryController;
 use App\Http\Controllers\Api\NotificationController;
 
 Route::post('/login',[AuthController::class,'login'])->name('login');
+Route::get('/get-user', [AuthController::class, 'getUser']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout',[AuthController::class,'logout'])->name('logout');
