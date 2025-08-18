@@ -13,7 +13,8 @@ class AuthController extends Controller
 {
 
     public function getUser(Request $request){{
-        $user = User::find($request->userId);
+        info($request->toArray());
+        $user = User::find($request->user_id);
         if(!$user){
             return sendResponse(null,404,"User not found");
         }
