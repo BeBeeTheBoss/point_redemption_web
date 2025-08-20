@@ -25,9 +25,16 @@ class HistoryController extends Controller
 
         $searchKey = $request->searchKey;
         $filterBy = $request->filterBy;
-        $auth_user_business_id = Auth::user()->role == 'admin' ? Auth::user()->business->id : Auth::user()->branch->business->id;
 
-        $histories = $this->model->where('business_id', $auth_user_business_id)->orderBy('id', 'desc')->when($searchKey, function ($query) use ($searchKey) {
+        $histories = $this->model->when(Auth::user(),function($query){
+
+            if(Auth::user()->role == 'admin'){
+                $query->where('business_id',Auth::user()->business_id);
+            }else if(Auth::user()->role == 'user'){
+                $query->where('branch_id',Auth::user()->branch_id);
+            }
+
+        })->orderBy('id', 'desc')->when($searchKey, function ($query) use ($searchKey) {
             $query->where(function ($query) use ($searchKey) {
                 $query->whereRaw('LOWER(member_name) LIKE ?', ['%' . strtolower($searchKey) . '%'])
                     ->orWhereRaw('LOWER(promotion_name) LIKE ?', ['%' . strtolower($searchKey) . '%']);
