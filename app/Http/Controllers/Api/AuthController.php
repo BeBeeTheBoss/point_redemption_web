@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Business;
+use App\Models\LoginDevice;
 use Hash;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -47,6 +48,14 @@ class AuthController extends Controller
             return sendResponse(null,405,"Campaign period is over");
         }
 
+        if(!LoginDevice::where('user_id',$user->id)->where('device_id',$request->deviceId)->first()){
+            $loginDevice = new LoginDevice();
+            $loginDevice->user_id = $user->id;
+            $loginDevice->device_id = $request->deviceId;
+            $loginDevice->device_name = $request->deviceName;
+            $loginDevice->save();
+        }
+
         Auth::loginUsingId($user->id);
         $token = $user->createToken(env('APP_NAME').'_Token')->plainTextToken;
 
@@ -57,6 +66,8 @@ class AuthController extends Controller
     }
 
     public function logout(Request $request){
+
+        LoginDevice::where('user_id',Auth::user()->id)->where('device_id',$request->deviceId)->delete();
 
         $request->user()->currentAccessToken()->delete();
         info("Logged out");

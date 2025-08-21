@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\BusinessPromotion;
+use App\Models\LoginDevice;
 use DateTime;
 use Carbon\Carbon;
 use App\Models\User;
@@ -72,8 +73,9 @@ class UserController extends Controller
     public function setPushNotiToken(Request $request)
     {
         $user = $this->model->find(Auth::user()->id);
-        $user->push_noti_token = $request->token;
-        $user->save();
+
+        LoginDevice::where('user_id',$user->id)->where('device_id',operator: $request->deviceId)->update(['push_noti_token' => $request->token]);
+
         return sendResponse($user, 200, "Token set successfully");
     }
 

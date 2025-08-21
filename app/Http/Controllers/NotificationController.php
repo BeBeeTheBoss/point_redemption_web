@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\LoginDevice;
 use App\Models\User;
 use Inertia\Inertia;
 use App\Models\Business;
@@ -170,15 +171,18 @@ class NotificationController extends Controller
             ]);
 
             if ($sendPushNoti) {
-                Http::withHeaders([
+                $loginDevices =LoginDevice::where('user_id',$user->id)->get();
+                foreach($loginDevices as $loginDevice){
+                    Http::withHeaders([
                     'Accept' => 'application/json',
                     'Content-Type' => 'application/json',
                 ])->post('https://exp.host/--/api/v2/push/send', [
-                            'to' => $user->push_noti_token,
+                            'to' => $loginDevice->push_noti_token,
                             'sound' => 'default',
                             'title' => $notification->title,
                             'body' => $notification->body ?? '',
                         ]);
+                }
             }
 
         }
