@@ -31,7 +31,9 @@
         "antd": "^5.26.6",
         "bootstrap": "^5.3.7",
         "dayjs": "^1.11.13",
+        "file-saver": "^2.0.5",
         "react-toastify": "^11.0.5",
+        "xlsx": "^0.18.5",
         "ziggy-js": "^2.5.3"
     }
 }

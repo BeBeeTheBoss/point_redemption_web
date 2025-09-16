@@ -107,12 +107,19 @@ export default function Create() {
                                 <Select
                                     mode="multiple"
                                     allowClear
-                                    style={{ width:380 }}
+                                    style={{ width: 380 }}
                                     placeholder="Please select"
                                     onChange={handleChangePromotions}
                                     options={promotions.map((promotion) => ({
                                         value: promotion.point_exchange_promotion_pro_no,
-                                        label: promotion.point_exchange_promotion_pro_no,
+                                        label: (
+                                            <div style={{ display: "flex", flexDirection: "column" }}>
+                                                <span>{promotion.point_exchange_promotion_pro_no}</span>
+                                                <span style={{ fontSize: "12px", color: "#999" }}>
+                                                    {promotion.point_exchange_promotion_name}
+                                                </span>
+                                            </div>
+                                        ),
                                     }))}
                                 />
                             </div>

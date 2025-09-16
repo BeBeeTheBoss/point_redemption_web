@@ -6,17 +6,29 @@ use App\Models\User;
 use App\Models\UserNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    public function __construct(protected User $model){}
+    public function __construct(protected User $model)
+    {
+    }
 
-    public function store(Request $request){
+    public function store(Request $request)
+    {
 
         $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required',
+            'password' => [
+                'required',
+                'string',
+                'min:8',             // must be at least 8 characters
+                'regex:/[a-z]/i',  // must contain at least one lowercase letter
+                'regex:/[A-Z]/i',  // must contain at least one uppercase letter
+                'regex:/[0-9]/i',  // must contain at least one number
+                'regex:/[^A-Za-z0-9]/i',  // must contain at least one special character
+            ],
         ]);
 
         $this->model->create([
@@ -31,7 +43,8 @@ class UserController extends Controller
         return redirect()->route('businessesPage')->with('success', 'User added');
     }
 
-    public function destroy(Request $request){
+    public function destroy(Request $request)
+    {
 
         $user = $this->model->find($request->id);
         UserNotification::where('user_id', $user->id)->delete();
@@ -40,11 +53,22 @@ class UserController extends Controller
         return redirect()->route('businessesPage')->with('success', 'User deleted');
     }
 
-    public function update(Request $request){
+    public function update(Request $request)
+    {
 
         $request->validate([
             'name' => 'required',
-            'email' => 'required'
+            'email' => 'required',
+            'password' => [
+                Rule::when($request->password != null, [
+                    'string',
+                    'min:8',           // must be at least 8 characters
+                    'regex:/[a-z]/i',  // must contain at least one lowercase letter
+                    'regex:/[A-Z]/i',  // must contain at least one uppercase letter
+                    'regex:/[0-9]/i',  // must contain at least one number
+                    'regex:/[^A-Za-z0-9]/i',  // must contain at least one special character
+                ])
+            ],
         ]);
 
         $user = $this->model->find($request->id);

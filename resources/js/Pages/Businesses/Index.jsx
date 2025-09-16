@@ -152,6 +152,11 @@ export default function Histories() {
                 if (erros.email) {
                     toast.error(erros.email);
                 }
+
+                if(erros.password) {
+                    toast.error(erros.password);
+                }
+
             }
         })
 
@@ -500,6 +505,9 @@ export default function Histories() {
                             <input type="email" className="inputBox shadow-sm" onChange={(e) => setForm({ ...form, email: e.target.value })} />
                             <label htmlFor="" className="d-block mt-3">Password</label>
                             <input type="text" className="inputBox shadow-sm" onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                            <div className="text-xs text-gray-500 mt-2" style={{ width: "350px" }}>
+                                Notice: Password must have at least one capital letter, one small letter, one number and one special character.
+                            </div>
                             <div className="" style={{ width: "350px" }}>
                                 <button className="w-100 bg-theme fw-bold shadow-sm text-white h-[44px] mt-4 rounded-lg" onClick={() => addUser()}>
                                     {loading ? <div className="spinner-border spinner-border-sm text-light" role="status"></div> : "Save"}
@@ -546,6 +554,9 @@ export default function Histories() {
                             <input type="email" className="inputBox shadow-sm" onChange={(e) => setForm({ ...form, email: e.target.value })} />
                             <label htmlFor="" className="d-block mt-3">Password</label>
                             <input type="text" className="inputBox shadow-sm" onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                            <div className="text-xs text-gray-500 mt-2" style={{ width: "350px" }}>
+                                Notice: Password must have at least one capital letter, one small letter, one number and one special character.
+                            </div>
                             <div className="" style={{ width: "350px" }}>
                                 <button className="w-100 bg-theme fw-bold shadow-sm text-white h-[44px] mt-4 rounded-lg" onClick={() => addUser()}>
                                     {loading ? <div className="spinner-border spinner-border-sm text-light" role="status"></div> : "Add User"}
@@ -570,6 +581,9 @@ export default function Histories() {
                             <input type="email" className="inputBox shadow-sm" value={userEditForm.email} onChange={(e) => setUserEditForm({ ...userEditForm, email: e.target.value })} />
                             <label htmlFor="" className="d-block mt-3">Password</label>
                             <input type="text" className="inputBox shadow-sm" onChange={(e) => setUserEditForm({ ...userEditForm, password: e.target.value })} />
+                            <div className="text-xs text-gray-500 mt-2" style={{ width: "350px" }}>
+                                Notice: Password must have at least one capital letter, one small letter, one number and one special character.
+                            </div>
                             <div className="" style={{ width: "350px" }}>
                                 <button className="w-100 bg-theme fw-bold shadow-sm text-white h-[44px] mt-4 rounded-lg" onClick={() => updateUser()}>
                                     {loading ? <div className="spinner-border spinner-border-sm text-light" role="status"></div> : "Update"}

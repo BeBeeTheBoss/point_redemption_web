@@ -1,7 +1,10 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { usePage } from "@inertiajs/react";
 import { useEffect, useState } from "react";
-import { UserOutlined, DollarOutlined, ShoppingOutlined, ShopOutlined } from '@ant-design/icons';
+import { UserOutlined, DollarOutlined, ShoppingOutlined, ShopOutlined, ExportOutlined } from '@ant-design/icons';
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import { toast } from "react-toastify";
 
 export default function Histories() {
 
@@ -9,6 +12,53 @@ export default function Histories() {
     const [histories, setHistories] = useState([]);
     const [totalPoints, setTotalPoints] = useState(0);
     const [users, setUsers] = useState([]);
+
+    const exportToExcel = (data, fileName = "export.xlsx") => {
+
+        let excelData = [];
+
+        if (data.length === 0) {
+            toast.error("No data to export");
+            return;
+        }
+
+        data.forEach((item) => {
+            excelData.push({
+                "Member Name": item.member_name,
+                "Member ID Card": item.member_idcard,
+                "Promotion Name": item.promotion_name,
+                "Promotion Code": item.promotion_code,
+                "Quantity": item.qty,
+                "Redeemed Points": item.redeemed_points,
+                "Business Name": item.business_name,
+                "Branch Name": item.branch_name,
+                "Date": new Date(item?.created_at).toLocaleString('en-CA', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }).replace('a.m.', 'AM').replace('p.m.', 'PM').replace(',', '')
+            });
+        });
+
+        // Convert JSON to worksheet
+        const worksheet = XLSX.utils.json_to_sheet(excelData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+
+        // Generate Excel file
+        const excelBuffer = XLSX.write(workbook, {
+            bookType: "xlsx",
+            type: "array",
+        });
+
+        // Download
+        const dataBlob = new Blob([excelBuffer], { type: "application/octet-stream" });
+        const today = new Date().toISOString().split('T')[0];
+        const fileNameWithDate = `${fileName.split('.')[0]}-${today}.${fileName.split('.')[1]}`;
+        saveAs(dataBlob, fileNameWithDate);
+    };
 
     useEffect(() => {
 
@@ -60,7 +110,12 @@ export default function Histories() {
                         </div>
                     </div>
                 </div>
-                <div className="fw-bold mt-4 mb-3" style={{ fontSize: "18px" }}>Histories</div>
+                <div className="fw-bold mt-4 mb-3 d-flex justify-content-between">
+                    <div style={{ fontSize: "19px" }}>Histories</div>
+                    <div>
+                        <button className="btn btn-sm btn-dark" onClick={() => exportToExcel(histories, "point-redemption-report.xlsx")}><ExportOutlined className="me-1" /> Export to Excel</button>
+                    </div>
+                </div>
                 <div className="shadow mt-2 mx-2 mb-3">
                     <div className="row p-3 bg-white border" style={{ borderTopLeftRadius: 10, borderTopRightRadius: 10 }}>
                         <div className="col-2 text-center text-muted">MEMBER</div>
@@ -72,11 +127,11 @@ export default function Histories() {
                     </div>
                     {histories.map((history) => (
                         <div className="row p-3 bg-white border mt-3">
-                            <div className="col-2" style={{ display: "flex", flexDirection: "column",alignItems: "center" }}>
+                            <div className="col-2" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                                 <div>{history.member_name}</div>
                                 <div className="fw-bold text-[]">{history.member_idcard}</div>
                             </div>
-                            <div className="col-4" style={{ display: "flex", flexDirection: "column",alignItems: "center" }}>
+                            <div className="col-4" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                                 <div>{history.promotion_name}</div>
                                 <div className="fw-bold text-[]">{history.promotion_code}</div>
                             </div>

@@ -44,9 +44,11 @@ export default function AuthenticatedLayout({ children }) {
                 <div className="row">
                     <div className="col-2" style={{ position: "fixed", height: "100vh" }}>
                         <div className="bg-theme rounded shadow-sm p-2 px-3" style={{ marginLeft: "-6px", marginTop: "5px", height: "98.5vh" }}>
-                            <div className="text-white brand fw-bold text-center" style={{ borderBottom: "1px solid #dfdfdf65", paddingBottom: "25px", marginTop: "18px" }}>
-                                <BarChartOutlined style={{ fontSize: "20px", marginRight: "1px" }} /> Admin Dashboard
-                            </div>
+                            <Link href={'/'} style={{ textDecoration: "none" }}>
+                                <div className="text-white brand fw-bold text-center" style={{ borderBottom: "1px solid #dfdfdf65", paddingBottom: "25px", marginTop: "18px" }}>
+                                    <BarChartOutlined style={{ fontSize: "20px", marginRight: "1px" }} /> Admin Dashboard
+                                </div>
+                            </Link>
                             <div className="text-white gap-2 mt-3" style={{ borderBottom: "1px solid #dfdfdf65" }}>
                                 <div className="flex justify-between items-center p-2 rounded mb-3" style={{ backgroundColor: "#ffffff25" }}>
                                     <div className="flex items-center ms-1">
