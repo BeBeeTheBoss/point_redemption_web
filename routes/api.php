@@ -20,7 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/set-push-noti-token', 'setPushNotiToken');
     });
 
-    Route::post('/redeem-points', [UserController::class, 'redeemPoints']);
+    Route::post('/redeem-points', [UserController::class, 'redeemPoints'])->middleware('idempotency');
 
     Route::group(['prefix' => 'notifications', 'controller' => NotificationController::class],function(){
         Route::get('/{id?}', 'index');

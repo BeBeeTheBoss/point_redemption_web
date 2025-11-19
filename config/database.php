@@ -99,16 +99,17 @@ return [
 
         'Cloud' => [
             'driver' => 'pgsql',
-            'host' => env('CLOUD_DB_HOST'),
-            'port' => env('CLOUD_DB_PORT'),
-            'database' => env('CLOUD_DB_DATABASE'),
-            'username' => env('CLOUD_DB_USERNAME'),
-            'password' => env('CLOUD_DB_PASSWORD'),
+            'url' => env('DATABASE_URL'),
+            'host' => env('CLOUD_DB_HOST', '127.0.0.1'),
+            'port' => env('CLOUD_DB_PORT', '5432'),
+            'database' => env('CLOUD_DB_DATABASE', 'forge'),
+            'username' => env('CLOUD_DB_USERNAME', 'forge'),
+            'password' => env('CLOUD_DB_PASSWORD', ''),
             'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer'
+            'sslmode' => 'prefer',
         ],
         'pos101_pgsql' => [
             'driver' => 'pgsql',

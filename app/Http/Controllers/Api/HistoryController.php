@@ -26,6 +26,8 @@ class HistoryController extends Controller
         $searchKey = $request->searchKey;
         $filterBy = $request->filterBy;
 
+        info($filterBy);
+
         $histories = $this->model->when(Auth::user(),function($query){
 
             if(Auth::user()->role == 'admin'){

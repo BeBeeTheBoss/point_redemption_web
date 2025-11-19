@@ -111,7 +111,39 @@ export default function Histories() {
                     </div>
                 </div>
                 <div className="fw-bold mt-4 mb-3 d-flex justify-content-between">
+                    <div className="d-flex">
+                    
                     <div style={{ fontSize: "19px" }}>Histories</div>
+
+                    {/* <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+
+                        <select className="p-2 rounded-lg border shadow-sm">
+                        {Array.from({ length: 12 }, (_, i) => {
+                        const date = new Date(0, i);
+                        const monthName = date.toLocaleString('en-US', { month: 'long' });
+                        return (
+                        <option key={i} value={i + 1}>
+                        {monthName}
+                        </option>
+                        );
+                        })}
+                        </select>
+
+
+                        <select className="p-2 rounded-lg border shadow-sm">
+                        {Array.from({ length: 50 }, (_, i) => {
+                        const year = 2000 + i;
+                        return (
+                        <option key={year} value={year}>
+                        {year}
+                        </option>
+                        );
+                        })}
+                        </select>
+                        </div>
+                    </div> */}
+                    </div>
                     <div>
                         <button className="btn btn-sm btn-dark" onClick={() => exportToExcel(histories, "point-redemption-report.xlsx")}><ExportOutlined className="me-1" /> Export to Excel</button>
                     </div>

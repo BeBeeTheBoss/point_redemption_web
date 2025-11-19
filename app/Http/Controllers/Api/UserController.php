@@ -64,6 +64,18 @@ class UserController extends Controller
             return sendResponse(null, 401, "Please check your old password");
         }
 
+        $request->validate([
+            'newPassword' => [
+                'required',
+                'string',
+                'min:8',             // must be at least 8 characters
+                'regex:/[a-z]/i',  // must contain at least one lowercase letter
+                'regex:/[A-Z]/i',  // must contain at least one uppercase letter
+                'regex:/[0-9]/i',  // must contain at least one number
+                'regex:/[^A-Za-z0-9]/i',  // must contain at least one special character
+            ],
+        ]);
+
         $user->password = Hash::make($request->newPassword);
         $user->save();
         return sendResponse($user, 200, "Password changed successfully");
@@ -96,6 +108,20 @@ class UserController extends Controller
         if (!$member_info) {
             return sendResponse(null, 404, "Member not found");
         }
+
+        $ts = $request->timeStamp;
+        
+        if (strlen((string) $ts) === 10) {
+            $ts = $ts * 1000;
+        }
+
+        $timestamp = Carbon::createFromTimestampMs((int) $ts);
+        $expired_time = $timestamp->addMinutes(5);
+        
+        if (Carbon::now()->gt($expired_time)) {
+            return sendResponse(null, 405, "QR code expired");
+        }
+
 
         $pos_db = getPosDBConnectionByBranchCode($member_info->branch_code);
 
@@ -134,7 +160,7 @@ class UserController extends Controller
 
             info($member_info->branch_code);
 
-            $recent_doc_no = $pos_db->table('gold_exchange.point_exchange_doc')->where('point_exchange_doc_branch', $member_info->branch_code)->orderByRaw("point_exchange_doc_datenow DESC")->value('point_exchange_doc_no');
+            $recent_doc_no = $pos_db->table('gold_exchange.point_exchange_doc')->where('point_exchange_doc_branch', $member_info->branch_code)->orderByRaw("point_exchange_doc_id DESC")->value('point_exchange_doc_no');
 
             info($recent_doc_no);
 
@@ -184,6 +210,9 @@ class UserController extends Controller
             }
 
             if ($remaining > 0) {
+                DB::rollBack();
+                $cloud_db->rollBack();
+                $pos_db->rollBack();
                 return sendResponse(null, 500, "Something went wrong, Try again");
             }
 
@@ -206,7 +235,7 @@ class UserController extends Controller
                 info($docuno);
 
                 $pos_db->table('gold_exchange.point_exchange_doc')->insert([
-                    'point_exchange_doc_id' => $pos_db->table('gold_exchange.point_exchange_doc')->max('point_exchange_doc_id') + 1,
+                    // 'point_exchange_doc_id' => $pos_db->table('gold_exchange.point_exchange_doc')->max('point_exchange_doc_id') + 1,
                     'point_exchange_doc_no' => $docuno,
                     'point_exchange_doc_empcode' => $supplier_code,
                     'point_exchange_doc_branch' => $member_info->branch_code,
@@ -221,7 +250,7 @@ class UserController extends Controller
                     'point_exchange_doc_cashchange' => 0,
                     'point_exchange_doc_money_total' => 0,
                     'point_exchange_doc_before_point' => $balance_points,
-                    'point_exchange_doc_after_point' => $balance_points - $points,
+                    'point_exchange_doc_after_point' => $balance_points - $points, 
                     'point_exchange_doc_barcode' => $promotion_info->point_exchange_promotion_item_barcode,
                     'point_exchange_doc_productname' => $promotion_info->point_exchange_promotion_item_goodname,
                     'point_exchange_doc_promotion_item_id' => $promotion_info->point_exchange_promotion_item_id,
@@ -233,7 +262,7 @@ class UserController extends Controller
                 ]);
 
                 $cloud_db->table('imember_pay.imember_score_pay')->insert([
-                    'imember_score_pay_id' => $cloud_db->table('imember_pay.imember_score_pay')->max('imember_score_pay_id') + 1,
+                    // 'imember_score_pay_id' => $cloud_db->table('imember_pay.imember_score_pay')->max('imember_score_pay_id') + 1,
                     'identification' => $member_info->identification_card,
                     'cuscode' => $member_info->customer_barcode,
                     'score_pay' => $points / $request->qty,
@@ -268,6 +297,8 @@ class UserController extends Controller
             DB::rollBack();
             $cloud_db->rollBack();
             $pos_db->rollBack();
+
+            info($e->getMessage());
 
             return sendResponse(null, 400, 'Something went wrong!, please try again');
         }
