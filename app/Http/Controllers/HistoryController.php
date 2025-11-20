@@ -37,7 +37,7 @@ class HistoryController extends Controller
         $histories = History::when($request->month, function ($query) use ($request) {
             $query->whereMonth('created_at', $request->month)->whereYear('created_at', $request->year);
         })
-        ->when($request->business, function ($query) use ($request) {
+        ->when($request->business != "null", function ($query) use ($request) {
             $query->where('business_id', $request->business);
         })
         ->orderBy('id', 'desc')->get();
