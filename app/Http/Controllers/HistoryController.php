@@ -11,22 +11,39 @@ use App\Http\Resources\HistoryDetailResource;
 
 class HistoryController extends Controller
 {
-    public function __construct(protected History $model){}
+    public function __construct(protected History $model) {}
 
-    public function historiesPage(){
+    public function historiesPage(Request $request)
+    {
 
-        $histories = History::whereMonth('created_at', Carbon::now()->month)->orderBy('id', 'desc')->get();
+        $histories = History::when($request->month, function ($query) use ($request) {
+            $query->whereMonth('created_at', $request->month)->whereYear('created_at', $request->year);
+        })->orderBy('id', 'desc')->get();
         $pos_db = getPosDBConnectionByBranchCode('MM-101');
 
         $promotions_count = $pos_db->table('gold_exchange.point_exchange_promotion')
             ->whereRaw('? BETWEEN point_exchange_promotion_datestart AND point_exchange_promotion_dateend', [now()])
             ->count();
 
-        return Inertia::render('Histories/Index',[
+        return Inertia::render('Histories/Index', [
             'histories' => HistoryDetailResource::collection($histories),
             'promotions_count' => $promotions_count,
-            'business_count' => Business::count()
+            'businesses' => Business::all(),
         ]);
+    }
+
+    public function filterHistories(Request $request)
+    {
+        $histories = History::when($request->month, function ($query) use ($request) {
+            $query->whereMonth('created_at', $request->month)->whereYear('created_at', $request->year);
+        })
+        ->when($request->business, function ($query) use ($request) {
+            $query->where('business_id', $request->business);
+        })
+        ->orderBy('id', 'desc')->get();
+
+        return sendResponse(HistoryDetailResource::collection($histories), 200);
+
     }
 
 }

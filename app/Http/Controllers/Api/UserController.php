@@ -110,14 +110,14 @@ class UserController extends Controller
         }
 
         $ts = $request->timeStamp;
-        
+
         if (strlen((string) $ts) === 10) {
             $ts = $ts * 1000;
         }
 
         $timestamp = Carbon::createFromTimestampMs((int) $ts);
         $expired_time = $timestamp->addMinutes(5);
-        
+
         if (Carbon::now()->gt($expired_time)) {
             return sendResponse(null, 405, "QR code expired");
         }
@@ -250,7 +250,7 @@ class UserController extends Controller
                     'point_exchange_doc_cashchange' => 0,
                     'point_exchange_doc_money_total' => 0,
                     'point_exchange_doc_before_point' => $balance_points,
-                    'point_exchange_doc_after_point' => $balance_points - $points, 
+                    'point_exchange_doc_after_point' => $balance_points - $points,
                     'point_exchange_doc_barcode' => $promotion_info->point_exchange_promotion_item_barcode,
                     'point_exchange_doc_productname' => $promotion_info->point_exchange_promotion_item_goodname,
                     'point_exchange_doc_promotion_item_id' => $promotion_info->point_exchange_promotion_item_id,

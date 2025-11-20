@@ -19,6 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::group(['prefix' => 'histories', 'controller' => HistoryController::class],function(){
         Route::get('/','historiesPage')->name('historiesPage');
+        Route::get('/filter','filterHistories')->name('filterHistories');
     });
 
     Route::group(['prefix' => 'users', 'controller' => UserController::class],function(){
