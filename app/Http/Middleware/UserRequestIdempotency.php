@@ -4,8 +4,8 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Cache;
+use Symfony\Component\HttpFoundation\Response;
 
 class UserRequestIdempotency
 {
@@ -16,22 +16,41 @@ class UserRequestIdempotency
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
+        $fingerprint = hash('sha256', json_encode([
+            'timestamp' => trim((string) $request->input('timeStamp')),
+            'idcard' => trim((string) $request->input('idcard')),
+            'promotion_code' => trim((string) $request->input('promotion_code')),
+            'qty' => (int) $request->input('qty'),
+        ], JSON_UNESCAPED_SLASHES));
 
-        $key = 'idempotency:' . md5(
-            $user->id .
-            $request->path() .
-            json_encode($request->all())
-        );
+        $request->attributes->set('idempotency_key', $fingerprint);
 
-        info($key);
+        $responseKey = "redemption:idempotency:response:{$fingerprint}";
+        $lock = Cache::lock("redemption:idempotency:lock:{$fingerprint}", 120);
 
-        if (Cache::has($key)) {
-             return sendResponse(null, 405, "QR code expired");
+        if ($cachedResponse = Cache::get($responseKey)) {
+            return response($cachedResponse, 200, ['Content-Type' => 'application/json']);
         }
 
-        Cache::put($key, true, now()->addMinutes(5));
+        if (! $lock->get()) {
+            return sendResponse(null, 409, 'This redemption is already being processed. Please check the redemption history.');
+        }
 
-        return $next($request);
+        try {
+            if ($cachedResponse = Cache::get($responseKey)) {
+                return response($cachedResponse, 200, ['Content-Type' => 'application/json']);
+            }
+
+            $response = $next($request);
+            $payload = json_decode($response->getContent(), true);
+
+            if (($payload['status'] ?? null) === 200) {
+                Cache::put($responseKey, $response->getContent(), now()->addMinutes(10));
+            }
+
+            return $response;
+        } finally {
+            $lock->release();
+        }
     }
 }

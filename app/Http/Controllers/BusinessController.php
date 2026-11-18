@@ -35,9 +35,19 @@ class BusinessController extends Controller
     {
 
         $pos_db = getPosDBConnectionByBranchCode('MM-101');
+        // $promotions = $pos_db->table('gold_exchange.point_exchange_promotion')
+        //     ->whereRaw('? BETWEEN point_exchange_promotion_datestart AND point_exchange_promotion_dateend', [now()])
+        //     ->get();
+
         $promotions = $pos_db->table('gold_exchange.point_exchange_promotion')
-            ->whereRaw('? BETWEEN point_exchange_promotion_datestart AND point_exchange_promotion_dateend', [now()])
-            ->get();
+        ->where(function ($query) {
+            $query->whereRaw(
+                '? BETWEEN point_exchange_promotion_datestart AND point_exchange_promotion_dateend',
+                [now()]
+            )
+            ->orWhereDay('point_exchange_promotion_datestart', 20);
+        })
+        ->get();
 
         return Inertia::render('Businesses/Create', [
             'promotions' => $promotions

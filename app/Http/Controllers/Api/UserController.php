@@ -12,6 +12,7 @@ use App\Models\History;
 use App\Models\Business;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
@@ -93,134 +94,176 @@ class UserController extends Controller
 
     public function redeemPoints(Request $request)
     {
-
-        info($request->all());
-
-        if ($request->missing(['idcard', 'points'])) {
-            return sendResponse(null, 400, "Invalid QR code");
-        }
+        $validated = $request->validate([
+            'idcard' => ['required', 'string', 'max:100'],
+            'promotion_code' => ['required', 'string', 'max:100'],
+            'qty' => ['required', 'integer', 'min:1', 'max:100'],
+            'points' => ['nullable', 'integer', 'min:1'],
+            'timeStamp' => ['required', 'integer'],
+        ]);
 
         $cloud_db = DB::connection('Cloud');
         $member_info = $cloud_db->table('public.gbh_customer')
-            ->where('identification_card', $request->idcard)
+            ->where('identification_card', $validated['idcard'])
             ->first();
 
         if (!$member_info) {
             return sendResponse(null, 404, "Member not found");
         }
 
-        $ts = $request->timeStamp;
+        $ts = $validated['timeStamp'];
 
         if (strlen((string) $ts) === 10) {
             $ts = $ts * 1000;
         }
 
-        $timestamp = Carbon::createFromTimestampMs((int) $ts);
-        $expired_time = $timestamp->addMinutes(5);
+        try {
+            $timestamp = Carbon::createFromTimestampMs((int) $ts);
+        } catch (\Throwable) {
+            return sendResponse(null, 400, "Invalid QR code");
+        }
 
-        if (Carbon::now()->gt($expired_time)) {
+        $now = Carbon::now();
+        if ($timestamp->gt($now->copy()->addSeconds(30)) || $now->gt($timestamp->copy()->addMinutes(5))) {
             return sendResponse(null, 405, "QR code expired");
         }
 
-
         $pos_db = getPosDBConnectionByBranchCode($member_info->branch_code);
 
+        $promotion_info = $pos_db->table('gold_exchange.point_exchange_promotion_item')
+            ->where('point_exchange_promotion_no', $validated['promotion_code'])
+            ->first();
+
+        if (! $promotion_info) {
+            return sendResponse(null, 404, "Promotion not found");
+        }
+
+        $businessId = Auth::user()->branch->business->id;
+        $branchId = Auth::user()->branch->id;
+        $valid_promotions = BusinessPromotion::where('business_id', $businessId)
+            ->pluck('promotion_code')
+            ->all();
+
+        if (! in_array($validated['promotion_code'], $valid_promotions, true)) {
+            return sendResponse(null, 404, "Not allowed to redeem this promotion");
+        }
+
+        $qty = (int) $validated['qty'];
+        $pointsPerItem = (int) $promotion_info->point_exchange_promotion_item_pointsneeded;
+
+        if ($pointsPerItem <= 0) {
+            return sendResponse(null, 400, "Promotion points are invalid");
+        }
+
+        $points = $pointsPerItem * $qty;
+
+        if (isset($validated['points']) && (int) $validated['points'] !== $points) {
+            return sendResponse(null, 400, "QR code points do not match the promotion");
+        }
+
+        $branch_info = Branch::where('branch_code', $member_info->branch_code)->first();
+
+        if (! $branch_info) {
+            return sendResponse(null, 404, "Branch not found");
+        }
 
         DB::beginTransaction();
         $cloud_db->beginTransaction();
         $pos_db->beginTransaction();
+
         try {
-
-            $promotion_info = $pos_db->table('gold_exchange.point_exchange_promotion_item')
-                ->where('point_exchange_promotion_no', $request->promotion_code)
-                ->first();
-
-            if (!$promotion_info) {
-                return sendResponse(null, 404, "Promotion not found");
-            }
-
-            $valid_promotions = BusinessPromotion::where('business_id', Auth::user()->branch->business->id)->pluck('promotion_code')->toArray();
-
-            if (!in_array($request->promotion_code, $valid_promotions)) {
-                return sendResponse(null, 404, "Not allowed to redeem this promotion");
-            }
-
+            // Serialize document number generation per POS branch.
+            $pos_db->select('SELECT pg_advisory_xact_lock(hashtext(?))', [$member_info->branch_code]);
 
             History::create([
-                'member_idcard' => $request->idcard,
+                'member_idcard' => $validated['idcard'],
                 'member_name' => $member_info->fullname,
-                'promotion_code' => $request->promotion_code,
+                'promotion_code' => $validated['promotion_code'],
                 'promotion_name' => $promotion_info->point_exchange_promotion_item_goodname,
-                'qty' => $request->qty,
-                'redeemed_points' => $request->points,
+                'qty' => $qty,
+                'redeemed_points' => $points,
                 'redeemed_date' => now(),
-                'business_id' => Auth::user()->branch->business->id,
-                'branch_id' => Auth::user()->branch->id
+                'business_id' => $businessId,
+                'branch_id' => $branchId,
+                'idempotency_key' => $request->attributes->get('idempotency_key'),
             ]);
 
             info($member_info->branch_code);
 
-            $recent_doc_no = $pos_db->table('gold_exchange.point_exchange_doc')->where('point_exchange_doc_branch', $member_info->branch_code)->orderByRaw("point_exchange_doc_id DESC")->value('point_exchange_doc_no');
+            $recent_doc_no = $pos_db->table('gold_exchange.point_exchange_doc')
+                ->where('point_exchange_doc_branch', $member_info->branch_code)
+                ->orderByDesc('point_exchange_doc_id')
+                ->lockForUpdate()
+                ->value('point_exchange_doc_no');
 
             info($recent_doc_no);
 
-            $dateString = explode('-', $recent_doc_no)[2];
-            $formattedDate = DateTime::createFromFormat('ymd', $dateString)->format('Y-m-d');
-
             $today = Carbon::now()->format('Y-m-d');
-
-            $branch_info = Branch::where('branch_code', $member_info->branch_code)->first();
             $branch_short_name = $branch_info->branch_short_name;
+            $docParts = $recent_doc_no ? explode('-', $recent_doc_no) : [];
+            $docDate = count($docParts) >= 4
+                ? DateTime::createFromFormat('ymd', $docParts[2])
+                : false;
+            $formattedDate = $docDate ? $docDate->format('Y-m-d') : null;
 
-            if ($formattedDate != $today) {
+            if ($formattedDate !== $today) {
                 $docuno = $this->generateNewDocNo($branch_short_name);
                 info($docuno);
             } else {
-                $number = explode('-', $recent_doc_no)[3];
+                $number = $docParts[3];
                 $number++;
                 $number = str_pad($number, 4, '0', STR_PAD_LEFT);
-                $docuno = implode('-', array_slice(explode('-', $recent_doc_no), 0, -1));
+                $docuno = implode('-', array_slice($docParts, 0, -1));
                 $docuno = "$docuno-$number";
             }
-
-            $idcard = $request->idcard;
-            $points = $request->points;
 
             $remaining = $points;
 
             $scores = $cloud_db->table('imember.imember_score')
-                ->where('idcard', $idcard)
+                ->where('idcard', $validated['idcard'])
                 ->where('score_balance', '>', 0)
                 ->orderBy('date_now', 'asc')
+                ->lockForUpdate()
                 ->get();
 
+                // info($scores->toArray());
+
+            $balance_points = (int) $scores->sum('score_balance');
+
+            if ($balance_points < $points) {
+                $this->rollBackTransactions([$pos_db, $cloud_db, DB::connection()]);
+
+                return sendResponse(null, 422, "Not enough points");
+            }
+
             foreach ($scores as $score) {
-                if ($remaining <= 0)
+                if ($remaining <= 0) {
                     break;
+                }
 
                 $deduct = min($score->score_balance, $remaining);
 
-                $cloud_db->table('imember.imember_score')
+                $updated = $cloud_db->table('imember.imember_score')
                     ->where('imember_score_id', $score->imember_score_id)
-                    ->update([
-                        'score_balance' => DB::raw("score_balance - $deduct")
-                    ]);
+                    ->where('score_balance', '>=', $deduct)
+                    ->decrement('score_balance', $deduct);
+
+                if ($updated !== 1) {
+                    throw new \RuntimeException('Point balance changed during redemption');
+                }
 
                 $remaining -= $deduct;
             }
 
             if ($remaining > 0) {
-                DB::rollBack();
-                $cloud_db->rollBack();
-                $pos_db->rollBack();
-                return sendResponse(null, 500, "Something went wrong, Try again");
+                throw new \RuntimeException('Unable to deduct the complete point balance');
             }
 
-            $balance_points = $scores->sum('score_balance');
+            info($balance_points);
 
             $supplier_code = '002-000181';
 
-            for ($i = 1; $i <= $request->qty; $i++) {
+            for ($i = 1; $i <= $qty; $i++) {
 
                 $coupon_barcode = $this->generateCouponBarcode($branch_short_name);
 
@@ -234,6 +277,9 @@ class UserController extends Controller
 
                 info($docuno);
 
+                $beforeItemPoints = $balance_points - (($i - 1) * $pointsPerItem);
+                $afterItemPoints = $beforeItemPoints - $pointsPerItem;
+
                 $pos_db->table('gold_exchange.point_exchange_doc')->insert([
                     // 'point_exchange_doc_id' => $pos_db->table('gold_exchange.point_exchange_doc')->max('point_exchange_doc_id') + 1,
                     'point_exchange_doc_no' => $docuno,
@@ -243,14 +289,14 @@ class UserController extends Controller
                     'point_exchange_doc_customer_code' => $member_info->customer_barcode,
                     'point_exchange_doc_customer_fullname' => $member_info->fullname,
                     'point_exchange_doc_promotion_id' => $promotion_info->point_exchange_promotion_id,
-                    'point_exchange_doc_pointwant' => $points / $request->qty,
-                    'point_exchange_doc_less_points' => $points / $request->qty,
+                    'point_exchange_doc_pointwant' => $pointsPerItem,
+                    'point_exchange_doc_less_points' => $pointsPerItem,
                     'point_exchange_doc_money_pro' => 1,
                     'point_exchange_doc_moneyreceive' => 0,
                     'point_exchange_doc_cashchange' => 0,
                     'point_exchange_doc_money_total' => 0,
-                    'point_exchange_doc_before_point' => $balance_points,
-                    'point_exchange_doc_after_point' => $balance_points - $points,
+                    'point_exchange_doc_before_point' => $beforeItemPoints,
+                    'point_exchange_doc_after_point' => $afterItemPoints,
                     'point_exchange_doc_barcode' => $promotion_info->point_exchange_promotion_item_barcode,
                     'point_exchange_doc_productname' => $promotion_info->point_exchange_promotion_item_goodname,
                     'point_exchange_doc_promotion_item_id' => $promotion_info->point_exchange_promotion_item_id,
@@ -265,7 +311,7 @@ class UserController extends Controller
                     // 'imember_score_pay_id' => $cloud_db->table('imember_pay.imember_score_pay')->max('imember_score_pay_id') + 1,
                     'identification' => $member_info->identification_card,
                     'cuscode' => $member_info->customer_barcode,
-                    'score_pay' => $points / $request->qty,
+                    'score_pay' => $pointsPerItem,
                     'pay_active' => true,
                     'exc_rate' => 100,
                     'empl_code' => $supplier_code,
@@ -282,8 +328,6 @@ class UserController extends Controller
                     'promotion_name' => $promotion_info->point_exchange_promotion_item_goodname,
                 ]);
 
-                $balance_points -= $points;
-
             }
 
             DB::commit();
@@ -292,17 +336,33 @@ class UserController extends Controller
 
             return sendResponse(null, 200, "Points redeemed successfully");
 
-        } catch (\Exception $e) {
+        } catch (QueryException $e) {
+            $this->rollBackTransactions([$pos_db, $cloud_db, DB::connection()]);
 
-            DB::rollBack();
-            $cloud_db->rollBack();
-            $pos_db->rollBack();
+            if ($e->getCode() === '23505') {
+                return sendResponse(null, 409, 'This QR code has already been redeemed');
+            }
 
-            info($e->getMessage());
+            report($e);
+
+            return sendResponse(null, 400, 'Something went wrong!, please try again');
+        } catch (\Throwable $e) {
+            $this->rollBackTransactions([$pos_db, $cloud_db, DB::connection()]);
+
+            report($e);
 
             return sendResponse(null, 400, 'Something went wrong!, please try again');
         }
 
+    }
+
+    private function rollBackTransactions(array $connections): void
+    {
+        foreach ($connections as $connection) {
+            if ($connection->transactionLevel() > 0) {
+                $connection->rollBack();
+            }
+        }
     }
 
     private function generateNewDocNo($branch_short_name)

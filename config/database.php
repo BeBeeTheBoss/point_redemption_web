@@ -94,7 +94,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
 
         'Cloud' => [
@@ -109,7 +109,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
         'pos101_pgsql' => [
             'driver' => 'pgsql',
@@ -123,7 +123,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
 
         'pos102_pgsql' => [
@@ -138,7 +138,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
 
         'pos103_pgsql' => [
@@ -153,7 +153,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
 
         'pos104_pgsql' => [
@@ -168,7 +168,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
 
         'pos105_pgsql' => [
@@ -183,7 +183,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
 
         'pos106_pgsql' => [
@@ -198,7 +198,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
 
         'pos107_pgsql' => [
@@ -213,7 +213,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
 
         'pos108_pgsql' => [
@@ -228,7 +228,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
         'pos109_pgsql' => [
             'driver' => 'pgsql',
@@ -242,7 +242,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
 
         'pos110_pgsql' => [
@@ -257,7 +257,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
 
         'pos112_pgsql' => [
@@ -272,7 +272,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
 
         'pos113_pgsql' => [
@@ -287,7 +287,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
 
         'pos114_pgsql' => [
@@ -302,7 +302,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
         'pos115_pgsql' => [
             'driver' => 'pgsql',
@@ -316,7 +316,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
         'pos201_pgsql' => [
             'driver' => 'pgsql',
@@ -330,7 +330,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
         'pos202_pgsql' => [
             'driver' => 'pgsql',
@@ -344,7 +344,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
 
         'pos203_pgsql' => [
@@ -359,7 +359,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
         'pos205_pgsql' => [
             'driver' => 'pgsql',
@@ -373,7 +373,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
         'pos504_pgsql' => [
             'driver' => 'pgsql',
@@ -387,7 +387,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
 
         'pos505_pgsql' => [
@@ -402,7 +402,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
         'pos509_pgsql' => [
             'driver' => 'pgsql',
@@ -416,7 +416,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
         'pos510_pgsql' => [
             'driver' => 'pgsql',
@@ -430,7 +430,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
         'pos511_pgsql' => [
             'driver' => 'pgsql',
@@ -444,7 +444,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
         'pos510temp_pgsql' => [
             'driver' => 'pgsql',
@@ -458,7 +458,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
         'pos511temp_pgsql' => [
             'driver' => 'pgsql',
@@ -472,7 +472,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
         'pos505temp_pgsql' => [
             'driver' => 'pgsql',
@@ -486,7 +486,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'schema' => 'public',
-            'sslmode' => 'prefer',
+            'sslmode' => 'disable',
         ],
         'sqlsrv' => [
             'driver' => 'sqlsrv',
